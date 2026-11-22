@@ -1,4 +1,4 @@
-# Tmall Homepage Clone (English)
+# Tmall Homepage Clone
 
 A visual and functional clone of the Tmall homepage. Plain HTML/CSS/JS on the frontend, a zero-dependency Node.js HTTP server on the backend, with products, accounts, carts, orders, and image-based search stored in JSON files.
 
@@ -9,6 +9,14 @@ npm start
 ```
 
 Open **http://localhost:3000**. No `npm install` needed — only Node.js 18+. Set `PORT=4000 npm start` to use another port.
+
+The built-in demo admin account has been removed. To provision an admin account, start the server with `ADMIN_EMAIL` and `ADMIN_PASSWORD` set; the password must be at least 12 characters. For example:
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD='use-a-long-unique-password' npm start
+```
+
+The configured admin account is synchronized at startup, and its existing sessions are invalidated. Without these variables there is no default admin login. Set `NODE_ENV=production` behind HTTPS to enable the `Secure` cookie flag.
 
 You can also open `index.html` directly. Without the server, the page falls back to built-in product data, a localStorage cart, and local colour matching — accounts and uploads need the server.
 
@@ -27,6 +35,10 @@ You can also open `index.html` directly. Without the server, the page falls back
 - **Coupons** — apply `WELCOME20` (20% off ¥100+), `SAVE10` (¥10 off ¥50+), or `FREESHIP` in the cart before checkout.
 - **Profile dashboard** — click your name in the top bar for order count, total spent, favorites, reviews, and visual-search stats.
 - **Smart search** — the search box suggests products, brands and countries as you type, plus trending terms.
+- **Comparison** — add up to four products with the ⇄ Compare button and view a side-by-side table of price, rating, brand, stock and colours.
+- **Full checkout** — choose a saved address (or add one), pick standard/express/pickup delivery and a payment method, then place the order. Points are earned on every order.
+- **Addresses & loyalty points** — manage delivery addresses in your profile and redeem points for coupon codes.
+- **Admin dashboard** — provision an admin with `ADMIN_EMAIL` and `ADMIN_PASSWORD` to see store stats, manage products and stock, update order statuses, and view users. Customer supplied text is escaped before display, with browser security headers and a restrictive content security policy.
 
 ## API
 
@@ -55,6 +67,17 @@ You can also open `index.html` directly. Without the server, the page falls back
 | `POST` | `/api/coupons/validate` | `{ code, subtotal }` → validity + discount |
 | `GET` | `/api/suggestions?q=` | Search suggestions + trending terms |
 | `GET` | `/api/profile` | Account stats + reviews |
+| `GET` / `POST` | `/api/addresses` | List / create `{ name, phone, line1, ... }` |
+| `PUT` / `DELETE` | `/api/addresses/:id` | Update / remove address |
+| `GET` | `/api/rewards` | Points, rewards and redemptions |
+| `POST` | `/api/rewards/redeem` | `{ rewardId }` → coupon code |
+| `GET` | `/api/admin/stats` | Dashboard metrics (admin only) |
+| `GET` / `POST` | `/api/admin/products` | List / create products (admin only) |
+| `PUT` / `DELETE` | `/api/admin/products/:id` | Update / delete product (admin only) |
+| `GET` | `/api/admin/orders?limit=&status=` | Admin only: list recent orders, optionally filtered by status (up to 100) |
+| `PATCH` | `/api/admin/orders/:orderId` | Admin only: set `{ status }` to Confirmed, Processing, Shipped, Delivered, or Cancelled |
+| `PATCH` | `/api/admin/products/:id` | Admin only: set `{ stock }` to a whole number from 0 to 1,000,000 |
+| `GET` | `/api/admin/users` | All users (admin only) |
 
 ## Data
 

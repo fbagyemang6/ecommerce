@@ -23,6 +23,18 @@ const COUPONS = [
   { code: 'SAVE10', type: 'fixed', value: 10, minSubtotal: 50, label: '¥10 off orders over ¥50' },
   { code: 'FREESHIP', type: 'shipping', value: 0, minSubtotal: 0, label: 'Free shipping on any order' },
 ];
+const REWARDS = [
+  { id: 'R_SAVE10', cost: 200, code: 'SAVE10', label: '¥10 off coupon' },
+  { id: 'R_FREESHIP', cost: 150, code: 'FREESHIP', label: 'Free shipping coupon' },
+  { id: 'R_WELCOME20', cost: 500, code: 'WELCOME20', label: '20% off coupon' },
+];
+const DELIVERY = {
+  standard: { label: 'Standard (3–5 days)', fee: 10 },
+  express: { label: 'Express (next day)', fee: 25 },
+  pickup: { label: 'Store pickup', fee: 0 },
+};
+const LEGACY_ADMIN_EMAIL = 'admin@tmall.com';
+const ORDER_STATUSES = new Set(['Confirmed', 'Processing', 'Shipped', 'Delivered', 'Cancelled']);
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -57,6 +69,11 @@ function loadStore() {
     saved.recentlyViewed = saved.recentlyViewed || {};
     saved.searchHistory = saved.searchHistory || {};
     saved.coupons = saved.coupons || COUPONS;
+    saved.addresses = saved.addresses || {};
+    saved.points = saved.points || {};
+    saved.redemptions = saved.redemptions || {};
+    saved.users = saved.users || [];
+    configureAdmin(saved);
     return saved;
   }
   const fresh = {
@@ -71,9 +88,50 @@ function loadStore() {
     recentlyViewed: {},
     searchHistory: {},
     coupons: COUPONS,
+    addresses: {},
+    points: {},
+    redemptions: {},
   };
+  configureAdmin(fresh);
   fs.writeFileSync(STORE_FILE, JSON.stringify(fresh, null, 2));
   return fresh;
+}
+
+function configureAdmin(data) {
+  data.users = data.users || [];
+  data.sessions = data.sessions || {};
+  // Remove the former public development account and invalidate any sessions
+  // it left behind in an existing store file.
+  const legacy = data.users.find((user) => user.email === LEGACY_ADMIN_EMAIL && user.id === 'u_admin');
+  if (legacy) {
+    data.users = data.users.filter((user) => user.id !== legacy.id);
+    Object.entries(data.sessions).forEach(([token, session]) => {
+      if (session.userId === legacy.id) delete data.sessions[token];
+    });
+  }
+
+  const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
+  const password = String(process.env.ADMIN_PASSWORD || '');
+  if (!email && !password) return;
+  if (!email || !password) throw new Error('Set both ADMIN_EMAIL and ADMIN_PASSWORD to configure an admin account');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('ADMIN_EMAIL must be a valid email address');
+  if (password.length < 12) throw new Error('ADMIN_PASSWORD must be at least 12 characters');
+
+  let admin = data.users.find((user) => user.email === email);
+  if (!admin) {
+    admin = {
+      id: `u_admin_${randomBytes(6).toString('hex')}`,
+      name: 'Tmall Admin',
+      email,
+      createdAt: new Date().toISOString(),
+    };
+    data.users.push(admin);
+  }
+  admin.role = 'admin';
+  admin.passwordHash = hashPassword(password);
+  Object.entries(data.sessions).forEach(([token, session]) => {
+    if (session.userId === admin.id) delete data.sessions[token];
+  });
 }
 
 let store = loadStore();
@@ -89,9 +147,6 @@ function saveStore() {
 function json(res, status, payload, headers = {}) {
   res.writeHead(status, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
     ...headers,
   });
   res.end(JSON.stringify(payload));
@@ -117,13 +172,27 @@ function context(req, res) {
   let guestId = cookies.tmall_guest;
   if (!guestId) {
     guestId = `g_${randomBytes(10).toString('hex')}`;
-    addCookie(res, `tmall_guest=${guestId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000`);
+    addCookie(res, `tmall_guest=${guestId}; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; Max-Age=31536000`);
   }
   return { user, guestId, ownerId: user ? `u_${user.id}` : guestId, session };
 }
 
 function publicUser(user) {
-  return user ? { id: user.id, name: user.name, email: user.email } : null;
+  return user ? { id: user.id, name: user.name, email: user.email, role: user.role || 'customer' } : null;
+}
+
+function pointsFor(ownerId) {
+  if (store.points[ownerId] === undefined) store.points[ownerId] = 0;
+  return store.points[ownerId];
+}
+
+function addressesFor(ownerId) {
+  if (!store.addresses[ownerId]) store.addresses[ownerId] = [];
+  return store.addresses[ownerId];
+}
+
+function requireAdmin(ctx) {
+  return ctx.user?.role === 'admin';
 }
 
 function mergeGuestInto(user, ctx) {
@@ -347,7 +416,7 @@ async function handleApi(req, res, url) {
     const token = randomBytes(24).toString('hex');
     store.sessions[token] = { userId: user.id, createdAt: new Date().toISOString() };
     saveStore();
-    addCookie(res, `tmall_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_AGE}`);
+    addCookie(res, `tmall_session=${token}; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; Max-Age=${SESSION_AGE}`);
     return json(res, 201, { user: publicUser(user) });
   }
 
@@ -362,14 +431,14 @@ async function handleApi(req, res, url) {
 
     mergeGuestInto(user, ctx);
     saveStore();
-    addCookie(res, `tmall_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_AGE}`);
+    addCookie(res, `tmall_session=${token}; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; Max-Age=${SESSION_AGE}`);
     return json(res, 200, { user: publicUser(user), cart: getCart(`u_${user.id}`).length });
   }
 
   if (resource === 'auth' && rawId === 'logout' && method === 'POST') {
     if (ctx.session) delete store.sessions[Object.keys(store.sessions).find((key) => store.sessions[key] === ctx.session)];
     saveStore();
-    addCookie(res, 'tmall_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+    addCookie(res, `tmall_session=; Path=/; HttpOnly; SameSite=Lax${process.env.NODE_ENV === 'production' ? '; Secure' : ''}; Max-Age=0`);
     return json(res, 200, { ok: true });
   }
 
@@ -434,10 +503,55 @@ async function handleApi(req, res, url) {
 
   /* ---- checkout + orders ---- */
 
+  /* ---- admin order and inventory management ---- */
+
+  if (resource === 'admin' && rawId === 'orders' && method === 'GET') {
+    if (!requireAdmin(ctx)) return json(res, ctx.user ? 403 : 401, { error: 'Admin access required' });
+    const requestedLimit = Number(url.searchParams.get('limit')) || 50;
+    const limit = Math.max(1, Math.min(100, requestedLimit));
+    const status = url.searchParams.get('status');
+    const orders = store.orders.filter((order) => !status || order.status === status).slice(0, limit);
+    return json(res, 200, { orders, count: orders.length });
+  }
+
+  if (resource === 'admin' && rawId === 'orders' && sub && method === 'PATCH') {
+    if (!requireAdmin(ctx)) return json(res, ctx.user ? 403 : 401, { error: 'Admin access required' });
+    const body = await readBody(req);
+    const status = String(body.status || '');
+    if (!ORDER_STATUSES.has(status)) {
+      return json(res, 400, { error: `Status must be one of: ${[...ORDER_STATUSES].join(', ')}` });
+    }
+    const order = store.orders.find((candidate) => candidate.id === sub);
+    if (!order) return json(res, 404, { error: 'Order not found' });
+    order.status = status;
+    saveStore();
+    return json(res, 200, order);
+  }
+
+  if (resource === 'admin' && rawId === 'products' && sub && method === 'PATCH') {
+    if (!requireAdmin(ctx)) return json(res, ctx.user ? 403 : 401, { error: 'Admin access required' });
+    const productId = Number(sub);
+    const product = store.products.find((candidate) => candidate.id === productId);
+    if (!product) return json(res, 404, { error: 'Product not found' });
+    const body = await readBody(req);
+    if (!Number.isSafeInteger(body.stock) || body.stock < 0 || body.stock > 1_000_000) {
+      return json(res, 400, { error: 'Stock must be a whole number from 0 to 1,000,000' });
+    }
+    product.stock = body.stock;
+    saveStore();
+    return json(res, 200, { product });
+  }
+
   if (resource === 'checkout' && method === 'POST') {
     const body = await readBody(req);
     const cart = getCart(ctx.ownerId);
     if (!cart.length) return json(res, 400, { error: 'Your cart is empty' });
+    for (const item of cart) {
+      const product = store.products.find((candidate) => candidate.id === item.id);
+      if (!product || item.quantity > product.stock) {
+        return json(res, 400, { error: `${product?.name || 'An item'} no longer has enough stock` });
+      }
+    }
     const items = cart.map((item) => ({ ...item }));
     const subtotal = Number(items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2));
     let discount = 0;
@@ -448,7 +562,21 @@ async function handleApi(req, res, url) {
       coupon = check.coupon.code;
       discount = check.discount;
     }
-    const shipping = subtotal >= 200 || coupon === 'FREESHIP' ? 0 : 10;
+    const deliveryKey = DELIVERY[body.delivery] ? body.delivery : 'standard';
+    const deliveryFee = deliveryKey === 'standard' ? (subtotal >= 200 ? 0 : DELIVERY.standard.fee) : DELIVERY[deliveryKey].fee;
+    const shipping = coupon === 'FREESHIP' ? 0 : deliveryFee;
+    const savedAddress = body.addressId ? addressesFor(ctx.ownerId).find((a) => a.id === Number(body.addressId)) : null;
+    const address = savedAddress || {
+      name: String(body.address?.name || ctx.user?.name || 'Guest'),
+      phone: String(body.address?.phone || ''),
+      line1: String(body.address?.line1 || 'Address provided at checkout'),
+      city: String(body.address?.city || ''),
+    };
+    const total = Number((subtotal - discount + shipping).toFixed(2));
+    const pointsEarned = Math.floor(total);
+    pointsFor(ctx.ownerId);
+    store.points[ctx.ownerId] += pointsEarned;
+
     const order = {
       id: `TM${Date.now().toString(36).toUpperCase()}`,
       ownerId: ctx.ownerId,
@@ -458,8 +586,12 @@ async function handleApi(req, res, url) {
       subtotal,
       coupon,
       discount,
+      shippingAddress: address,
+      delivery: { key: deliveryKey, label: DELIVERY[deliveryKey].label, fee: shipping },
+      payment: String(body.payment || 'Card'),
+      pointsEarned,
       shipping,
-      total: Number((subtotal - discount + shipping).toFixed(2)),
+      total,
       status: 'Confirmed',
     };
     items.forEach((item) => {
@@ -659,9 +791,204 @@ async function handleApi(req, res, url) {
         reviews: reviews.length,
         wishlist: wishlistFor(ctx.ownerId).length,
         visualSearches: store.visualSearches.filter((s) => s.ownerId === ctx.ownerId).length,
+        points: pointsFor(ctx.ownerId),
+        addresses: addressesFor(ctx.ownerId).length,
       },
       reviews,
     });
+  }
+
+  /* ---- addresses ---- */
+
+  if (resource === 'addresses' && method === 'GET') {
+    const addresses = addressesFor(ctx.ownerId);
+    return json(res, 200, {
+      addresses,
+      defaultId: addresses.find((a) => a.isDefault)?.id || addresses[0]?.id || null,
+    });
+  }
+
+  if (resource === 'addresses' && method === 'POST') {
+    const body = await readBody(req);
+    const address = {
+      id: Date.now(),
+      name: String(body.name || '').trim(),
+      phone: String(body.phone || '').trim(),
+      line1: String(body.line1 || '').trim(),
+      line2: String(body.line2 || '').trim(),
+      city: String(body.city || '').trim(),
+      region: String(body.region || '').trim(),
+      postal: String(body.postal || '').trim(),
+      isDefault: Boolean(body.isDefault),
+    };
+    if (!address.name || !address.phone || !address.line1) {
+      return json(res, 400, { error: 'Name, phone and street address are required' });
+    }
+    const addresses = addressesFor(ctx.ownerId);
+    if (address.isDefault || !addresses.length) addresses.forEach((a) => { a.isDefault = false; });
+    if (!addresses.length) address.isDefault = true;
+    addresses.push(address);
+    saveStore();
+    return json(res, 201, address);
+  }
+
+  if (resource === 'addresses' && id !== null && method === 'PUT') {
+    const address = addressesFor(ctx.ownerId).find((a) => a.id === id);
+    if (!address) return json(res, 404, { error: 'Address not found' });
+    const body = await readBody(req);
+    ['name', 'phone', 'line1', 'line2', 'city', 'region', 'postal'].forEach((key) => {
+      if (body[key] !== undefined) address[key] = String(body[key]).trim();
+    });
+    if (body.isDefault) addressesFor(ctx.ownerId).forEach((a) => { a.isDefault = a.id === id; });
+    saveStore();
+    return json(res, 200, address);
+  }
+
+  if (resource === 'addresses' && id !== null && method === 'DELETE') {
+    const addresses = addressesFor(ctx.ownerId);
+    const before = addresses.length;
+    store.addresses[ctx.ownerId] = addresses.filter((a) => a.id !== id);
+    if (store.addresses[ctx.ownerId].length === before) return json(res, 404, { error: 'Address not found' });
+    if (!store.addresses[ctx.ownerId].some((a) => a.isDefault) && store.addresses[ctx.ownerId].length) {
+      store.addresses[ctx.ownerId][0].isDefault = true;
+    }
+    saveStore();
+    return json(res, 200, { addresses: store.addresses[ctx.ownerId] });
+  }
+
+  /* ---- loyalty points ---- */
+
+  if (resource === 'rewards' && method === 'GET') {
+    return json(res, 200, {
+      points: pointsFor(ctx.ownerId),
+      rewards: REWARDS,
+      redeemed: store.redemptions[ctx.ownerId] || [],
+    });
+  }
+
+  if (resource === 'rewards' && rawId === 'redeem' && method === 'POST') {
+    if (!ctx.user) return json(res, 401, { error: 'Sign in to redeem points' });
+    const body = await readBody(req);
+    const reward = REWARDS.find((r) => r.id === body.rewardId);
+    if (!reward) return json(res, 404, { error: 'Reward not found' });
+    if (pointsFor(ctx.ownerId) < reward.cost) {
+      return json(res, 400, { error: `You need ${reward.cost} points — you have ${pointsFor(ctx.ownerId)}` });
+    }
+    store.points[ctx.ownerId] -= reward.cost;
+    const redeemed = store.redemptions[ctx.ownerId] || (store.redemptions[ctx.ownerId] = []);
+    redeemed.unshift({ id: reward.id, code: reward.code, label: reward.label, createdAt: new Date().toISOString() });
+    if (!store.coupons.some((c) => c.code === reward.code)) {
+      store.coupons.push(COUPONS.find((c) => c.code === reward.code));
+    }
+    saveStore();
+    return json(res, 200, { code: reward.code, points: store.points[ctx.ownerId] });
+  }
+
+  /* ---- admin dashboard ---- */
+
+  if (resource === 'admin' && !requireAdmin(ctx)) {
+    return json(res, 403, { error: 'Admin access required' });
+  }
+
+  if (resource === 'admin' && rawId === 'stats' && method === 'GET') {
+    const revenue = Number(store.orders.reduce((sum, o) => sum + o.total, 0).toFixed(2));
+    const rated = store.products.map(decorate).filter((p) => p.reviewCount);
+    const avgRating = rated.length ? Number((rated.reduce((sum, p) => sum + p.rating, 0) / rated.length).toFixed(1)) : 0;
+    return json(res, 200, {
+      users: store.users.length,
+      orders: store.orders.length,
+      revenue,
+      products: store.products.length,
+      lowStock: store.products.filter((p) => p.stock < 10).length,
+      reviews: store.reviews.length,
+      avgRating,
+      recentOrders: store.orders.slice(0, 6),
+      topProducts: rated.sort((a, b) => b.rating - a.rating).slice(0, 5),
+    });
+  }
+
+  if (resource === 'admin' && rawId === 'products' && method === 'GET') {
+    return json(res, 200, { products: store.products.map(decorate) });
+  }
+
+  if (resource === 'admin' && rawId === 'products' && method === 'POST') {
+    const body = await readBody(req);
+    const name = String(body.name || '').trim();
+    const price = Number(body.price);
+    if (!name || !Number.isFinite(price) || price < 0) {
+      return json(res, 400, { error: 'A name and a valid price are required' });
+    }
+    const product = {
+      id: Math.max(0, ...store.products.map((p) => p.id)) + 1,
+      name,
+      price,
+      tag: String(body.tag || 'General'),
+      origin: String(body.origin || 'China'),
+      brand: String(body.brand || 'Tmall'),
+      stock: Math.max(0, Number(body.stock) || 0),
+      new: Boolean(body.new),
+      global: Boolean(body.global),
+      colors: Array.isArray(body.colors) && body.colors.length ? body.colors.slice(0, 3).map(String) : ['#cccccc'],
+      description: String(body.description || 'A quality pick from Tmall.'),
+      img: String(body.img || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=460&h=460&fit=crop'),
+    };
+    store.products.unshift(product);
+    saveStore();
+    return json(res, 201, decorate(product));
+  }
+
+  if (resource === 'admin' && rawId === 'products' && sub && (method === 'PUT' || method === 'DELETE')) {
+    const targetId = Number(sub);
+    const index = store.products.findIndex((p) => p.id === targetId);
+    if (index === -1) return json(res, 404, { error: 'Product not found' });
+    if (method === 'DELETE') {
+      store.products.splice(index, 1);
+      saveStore();
+      return json(res, 200, { ok: true });
+    }
+    const body = await readBody(req);
+    ['name', 'tag', 'origin', 'brand', 'description', 'img'].forEach((key) => {
+      if (body[key] !== undefined) store.products[index][key] = String(body[key]);
+    });
+    if (body.price !== undefined) store.products[index].price = Math.max(0, Number(body.price) || 0);
+    if (body.stock !== undefined) store.products[index].stock = Math.max(0, Number(body.stock) || 0);
+    if (body.new !== undefined) store.products[index].new = Boolean(body.new);
+    if (body.global !== undefined) store.products[index].global = Boolean(body.global);
+    if (Array.isArray(body.colors)) store.products[index].colors = body.colors.slice(0, 3).map(String);
+    saveStore();
+    return json(res, 200, decorate(store.products[index]));
+  }
+
+  if (resource === 'admin' && rawId === 'orders' && method === 'GET') {
+    return json(res, 200, { orders: store.orders });
+  }
+
+  if (resource === 'admin' && rawId === 'orders' && sub && method === 'PUT') {
+    const order = store.orders.find((o) => o.id === sub);
+    if (!order) return json(res, 404, { error: 'Order not found' });
+    const body = await readBody(req);
+    const status = String(body.status || '').trim();
+    if (!ORDER_STATUSES.has(status)) {
+      return json(res, 400, { error: `Status must be one of: ${[...ORDER_STATUSES].join(', ')}` });
+    }
+    order.status = status;
+    saveStore();
+    return json(res, 200, order);
+  }
+
+  if (resource === 'admin' && rawId === 'users' && method === 'GET') {
+    const users = store.users.map((user) => {
+      const ownerId = `u_${user.id}`;
+      const orders = store.orders.filter((o) => o.ownerId === ownerId);
+      return {
+        ...publicUser(user),
+        joined: user.createdAt,
+        orders: orders.length,
+        spent: Number(orders.reduce((sum, o) => sum + o.total, 0).toFixed(2)),
+        points: store.points[ownerId] || 0,
+      };
+    });
+    return json(res, 200, { users });
   }
 
   return json(res, 404, { error: 'Endpoint not found' });
@@ -711,6 +1038,11 @@ function serveStatic(req, res, url) {
 /* ---------- server ---------- */
 
 const server = http.createServer((req, res) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname.startsWith('/api/')) {
     handleApi(req, res, url).catch((error) => json(res, 400, { error: error.message }));
