@@ -40,7 +40,12 @@ const fallbackProducts = [
 const CART_KEY = "tmallCart";
 const ORDERS_KEY = "tmallOrders";
 const money = (amount) => `¥ ${Number(amount).toFixed(2)}`;
+const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+}[char]));
+const safeColor = (value) => /^#[0-9a-f]{6}$/i.test(String(value)) ? value : "#cccccc";
 let useApi = window.location.protocol !== "file:";
+let apiStartupError = "";
 let products = fallbackProducts;
 let facets = { categories: [], origins: [], brands: [] };
 let currentUser = null;
@@ -51,6 +56,9 @@ let localOrders = JSON.parse(localStorage.getItem(ORDERS_KEY) || "[]");
 let localRecent = JSON.parse(localStorage.getItem("tmallRecent") || "[]");
 let appliedCoupon = null;
 let selectedRating = 5;
+let compareIds = [];
+let checkoutState = { addressId: null, delivery: "standard", payment: "Card" };
+let adminTab = "overview";
 let visual = { dataUrl: null, palette: [], result: null };
 
 const $ = (selector) => document.querySelector(selector);
@@ -60,11 +68,18 @@ const searchInput = $(".search-container input");
 /* ---------------- generic helpers ---------------- */
 
 async function api(path, options = {}) {
-  const response = await fetch(`/api${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-  });
-  const data = await response.json();
+  let response;
+  try {
+    response = await fetch(`/api${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    });
+  } catch (error) {
+    throw new Error(`Could not contact ${window.location.origin}/api${path}: ${error.message}`);
+  }
+  let data;
+  try { data = await response.json(); }
+  catch { throw new Error(`Expected a JSON response from ${window.location.origin}/api${path} but received HTTP ${response.status}.`); }
   if (!response.ok) throw new Error(data.error || "Something went wrong");
   return data;
 }
@@ -110,15 +125,16 @@ function productCardHtml(p, score) {
   const rating = p.rating ? `<p class="rating">${"★".repeat(Math.round(p.rating))} ${p.rating.toFixed(1)} <small>(${p.reviewCount})</small></p>` : "";
   return `
     <article class="product-card" data-id="${p.id}">
-      ${p.reason ? `<span class="reason">${p.reason}</span>` : ""}
+      ${p.reason ? `<span class="reason">${escapeHtml(p.reason)}</span>` : ""}
       ${score ? `<span class="match-badge">${score}% match</span>` : ""}
       <button class="wish-btn ${saved ? "saved" : ""}" data-id="${p.id}" aria-label="Save to favorites">${saved ? "♥" : "♡"}</button>
-      <img src="${p.img}" alt="${p.name}" loading="lazy" />
-      <p class="product-name">${p.name}</p>
+      <img src="${escapeHtml(p.img)}" alt="${escapeHtml(p.name)}" loading="lazy" />
+      <p class="product-name">${escapeHtml(p.name)}</p>
       ${rating}
-      <p class="product-origin">${p.origin || "China"} · ${p.brand || "Tmall"}</p>
+      <p class="product-origin">${escapeHtml(p.origin || "China")} · ${escapeHtml(p.brand || "Tmall")}</p>
       <p class="price"><small>¥</small>${p.price.toFixed(2)}</p>
       <button class="cart-btn" data-id="${p.id}">Add to Cart</button>
+      <button class="mini-btn compare-btn" data-id="${p.id}">⇄ Compare</button>
     </article>`;
 }
 
@@ -165,7 +181,7 @@ async function loadCatalog() {
       products = data.products;
       facets = data.facets;
       return;
-    } catch { useApi = false; }
+    } catch (error) { apiStartupError = error.message; useApi = false; }
   }
   products = fallbackProducts;
   facets = {
@@ -208,8 +224,8 @@ function renderCart(summary) {
   list.innerHTML = summary.items.length
     ? summary.items.map((item) => `
         <div class="cart-row">
-          <img src="${item.img}" alt="" />
-          <div><strong>${item.name}</strong><small>${money(item.price)} × ${item.quantity}</small></div>
+          <img src="${escapeHtml(item.img)}" alt="" />
+          <div><strong>${escapeHtml(item.name)}</strong><small>${money(item.price)} × ${item.quantity}</small></div>
           <div class="cart-row-actions">
             <div class="qty-stepper">
               <button class="qty-minus" data-id="${item.id}" aria-label="Decrease quantity">−</button>
@@ -230,7 +246,7 @@ function saveLocalCart() {
 async function loadCart() {
   if (useApi) {
     try { renderCart(await api("/cart")); return; }
-    catch { useApi = false; }
+    catch (error) { apiStartupError = error.message; useApi = false; }
   }
   renderCart(localCartSummary());
 }
@@ -328,9 +344,9 @@ function renderOrders(orders) {
   body.innerHTML = orders.length
     ? orders.map((order) => `
         <div class="order-card">
-          <div class="order-meta"><span>Order <b>#${order.id}</b></span><span>${new Date(order.createdAt).toLocaleString()}</span></div>
-          <ul class="order-items">${order.items.map((item) => `<li><span>${item.name} × ${item.quantity}</span><span>${money(item.price * item.quantity)}</span></li>`).join("")}</ul>
-          <div class="order-total"><span>Shipping ${order.shipping ? money(order.shipping) : "Free"}${order.coupon ? ` · ${order.coupon} (−${money(order.discount)})` : ""} · <span class="order-status">${order.status}</span></span><b>${money(order.total)}</b></div>
+          <div class="order-meta"><span>Order <b>#${escapeHtml(order.id)}</b></span><span>${escapeHtml(new Date(order.createdAt).toLocaleString())}</span></div>
+          <ul class="order-items">${order.items.map((item) => `<li><span>${escapeHtml(item.name)} × ${Number(item.quantity)}</span><span>${money(item.price * item.quantity)}</span></li>`).join("")}</ul>
+          <div class="order-total"><span>Shipping ${order.shipping ? money(order.shipping) : "Free"}${order.coupon ? ` · ${escapeHtml(order.coupon)} (−${money(order.discount)})` : ""} · <span class="order-status">${escapeHtml(order.status)}</span></span><b>${money(order.total)}</b></div>
         </div>`).join("")
     : `<p class="cart-empty">No orders yet. Your completed orders will appear here.</p>`;
 }
@@ -338,6 +354,15 @@ function renderOrders(orders) {
 function setOrdersOpen(open) {
   $("#orders-overlay")?.classList.toggle("open", open);
   $("#orders-modal")?.classList.toggle("open", open);
+}
+
+function setSiteNavigationOpen(open) {
+  const wasOpen = $("#site-navigation-modal")?.classList.contains("open");
+  $("#site-navigation-overlay")?.classList.toggle("open", open);
+  $("#site-navigation-modal")?.classList.toggle("open", open);
+  $("#site-navigation-trigger")?.setAttribute("aria-expanded", String(open));
+  if (open) $("#site-navigation-close")?.focus();
+  else if (wasOpen) $("#site-navigation-trigger")?.focus();
 }
 
 async function openOrders() {
@@ -380,6 +405,8 @@ function updateAuthUI() {
   const memberSub = $("#member-sub");
   const memberAuth = $("#member-auth");
   const memberRegister = $("#member-register");
+  const adminLink = $("#admin-link");
+  if (adminLink) adminLink.hidden = currentUser?.role !== "admin";
   if (currentUser) {
     const name = currentUser.name;
     if (topAuth) topAuth.textContent = `Hi, ${name}`;
@@ -403,7 +430,7 @@ function updateAuthUI() {
 async function loadUser() {
   if (!useApi) return;
   try { currentUser = (await api("/auth")).user; }
-  catch { useApi = false; }
+  catch (error) { apiStartupError = error.message; useApi = false; }
   updateAuthUI();
 }
 
@@ -416,7 +443,10 @@ async function submitAuth(event) {
   const error = $("#auth-error");
   if (error) error.textContent = "";
   if (!useApi) {
-    if (error) error.textContent = "Accounts need the server. Run npm start to sign in.";
+    if (error) {
+      const cause = apiStartupError ? ` Startup check: ${apiStartupError}` : " This page was opened as a local file.";
+      error.textContent = `This page isn't connected to the store backend.${cause} Open the exact URL printed by npm start (usually http://localhost:3000), not a VS Code Live Server or file:// page.`;
+    }
     return;
   }
   try {
@@ -445,7 +475,7 @@ async function logout() {
   toast("You've signed out");
 }
 
-/* ---------------- wishlist ---------------- */
+/* ---------------- wishlist --------------- */
 
 function refreshWishButtons() {
   document.querySelectorAll(".wish-btn").forEach((button) => {
@@ -504,8 +534,8 @@ async function loadWishlist() {
     ? `<div class="wishlist-body">${items.map((p) => `
         <div class="wish-item">
           <button class="remove-item" data-id="${p.id}" aria-label="Remove">×</button>
-          <img src="${p.img}" alt="${p.name}" />
-          <p>${p.name}</p>
+          <img src="${escapeHtml(p.img)}" alt="${escapeHtml(p.name)}" />
+          <p>${escapeHtml(p.name)}</p>
           <strong>${money(p.price)}</strong>
           <button class="cart-btn" data-id="${p.id}">Add to Cart</button>
         </div>`).join("")}</div>`
@@ -563,9 +593,9 @@ async function loadReviews(productId) {
     ? `<p class="review-stars">${stars(Math.round(data.rating))} ${data.rating.toFixed(1)} · ${data.reviewCount} review${data.reviewCount === 1 ? "" : "s"}</p>` +
       data.reviews.map((r) => `
         <div class="review-item">
-          <strong>${r.ownerName}</strong>${r.verified ? `<span class="verified">✓ Verified purchase</span>` : ""}
+          <strong>${escapeHtml(r.ownerName)}</strong>${r.verified ? `<span class="verified">✓ Verified purchase</span>` : ""}
           <span class="review-stars" style="float:right">${stars(r.rating)}</span>
-          ${r.title ? `<p><b>${r.title}</b></p>` : ""}<p>${r.body}</p>
+          ${r.title ? `<p><b>${escapeHtml(r.title)}</b></p>` : ""}<p>${escapeHtml(r.body)}</p>
           <small style="color:#aaa">${new Date(r.createdAt).toLocaleDateString()}</small>
         </div>`).join("")
     : `<p class="cart-empty" style="padding:12px 0">No reviews yet. Be the first to share your thoughts.</p>`;
@@ -620,7 +650,7 @@ function renderSuggestions(items) {
   const box = $("#suggestions");
   if (!box) return;
   box.innerHTML = items.length
-    ? items.map((i) => `<button data-term="${i.term}">${i.term}${i.trending ? "<small>trending</small>" : ""}</button>`).join("")
+    ? items.map((i) => `<button data-term="${escapeHtml(i.term)}">${escapeHtml(i.term)}${i.trending ? "<small>trending</small>" : ""}</button>`).join("")
     : "";
   box.classList.toggle("show", items.length > 0);
 }
@@ -654,9 +684,14 @@ async function openProfile() {
     return;
   }
   let data = null;
-  if (useApi) { try { data = await api("/profile"); } catch { useApi = false; } }
+  let rewards = { points: 0, rewards: [], redeemed: [] };
+  let addresses = [];
+  if (useApi) {
+    try { [data, rewards, addresses] = await Promise.all([api("/profile"), api("/rewards"), api("/addresses").then((r) => r.addresses)]); }
+    catch { useApi = false; }
+  }
   if (!data) {
-    data = { stats: { orders: localOrders.length, spent: localOrders.reduce((s, o) => s + o.total, 0), wishlist: wishlistIds.length, reviews: 0, visualSearches: 0 }, reviews: [] };
+    data = { stats: { orders: localOrders.length, spent: localOrders.reduce((s, o) => s + o.total, 0), wishlist: wishlistIds.length, reviews: 0, visualSearches: 0, points: 0 }, reviews: [] };
   }
   const heading = $("#profile-heading");
   if (heading) heading.textContent = `${currentUser.name}'s Account`;
@@ -668,6 +703,7 @@ async function openProfile() {
       <div class="profile-stat"><b>${s.wishlist}</b><span>Favorites</span></div>
       <div class="profile-stat"><b>${s.reviews}</b><span>Reviews</span></div>
       <div class="profile-stat"><b>${s.visualSearches}</b><span>Visual searches</span></div>
+      <div class="profile-stat"><b>${s.points ?? 0}</b><span>Points</span></div>
     </div>
     <div class="profile-actions">
       <button class="ghost-btn" data-profile="orders">My Orders</button>
@@ -675,14 +711,218 @@ async function openProfile() {
       <button class="ghost-btn" data-profile="reviews">My Reviews</button>
       <button class="ghost-btn" data-profile="signout">Sign Out</button>
     </div>
+    <div class="checkout-section"><h4>Loyalty points · ${rewards.points}</h4>
+      <div class="rewards-grid">${rewards.rewards.map((r) => `<div class="reward-card"><strong>${r.label}</strong>${r.cost} points<br /><button class="mini-btn" data-redeem="${r.id}">Redeem</button></div>`).join("") || `<p class="cart-empty">No rewards available.</p>`}</div>
+    </div>
+    <div class="checkout-section"><h4>Saved addresses</h4>
+      <div class="address-grid">${addresses.length
+        ? addresses.map((a) => `<div class="address-card">${a.isDefault ? "<b>Default</b>" : ""}<strong>${a.name}</strong> · ${a.phone}<small>${a.line1}</small><small>${a.city} ${a.region} ${a.postal}</small></div>`).join("")
+        : `<p class="cart-empty" style="padding:10px">No addresses saved yet.</p>`}</div>
+      <button class="ghost-btn" id="profile-add-address" style="margin-top:8px">+ Add address</button>
+    </div>
     <div class="profile-reviews"><h4>Recent reviews</h4>${data.reviews.length
-      ? data.reviews.slice(0, 3).map((r) => `<div class="review-item"><strong>Product #${r.productId}</strong><span class="review-stars" style="float:right">${stars(r.rating)}</span><p>${r.body}</p></div>`).join("")
+      ? data.reviews.slice(0, 3).map((r) => `<div class="review-item"><strong>Product #${Number(r.productId)}</strong><span class="review-stars" style="float:right">${stars(Number(r.rating))}</span><p>${escapeHtml(r.body)}</p></div>`).join("")
       : `<p class="cart-empty" style="padding:10px 0">No reviews yet.</p>`}</div>`;
 }
 
 function closeProfile() {
   $("#profile-overlay")?.classList.remove("open");
   $("#profile-modal")?.classList.remove("open");
+}
+
+/* ---------------- product comparison ---------------- */
+
+function renderCompareBar() {
+  const bar = $("#compare-bar");
+  if (!bar) return;
+  bar.classList.toggle("show", compareIds.length > 0);
+  const items = $("#compare-items");
+  if (items) {
+    items.innerHTML = compareIds.map((pid) => {
+      const p = products.find((x) => x.id === pid);
+      return p ? `<span class="compare-thumb"><img src="${escapeHtml(p.img)}" alt="${escapeHtml(p.name)}" /><button data-id="${p.id}" aria-label="Remove">×</button></span>` : "";
+    }).join("");
+  }
+}
+
+function toggleCompare(id) {
+  const pid = Number(id);
+  const index = compareIds.indexOf(pid);
+  if (index !== -1) compareIds.splice(index, 1);
+  else if (compareIds.length >= 4) return toast("You can compare up to 4 products");
+  else compareIds.push(pid);
+  renderCompareBar();
+}
+
+function setCompareOpen(open) {
+  $("#compare-overlay")?.classList.toggle("open", open);
+  $("#compare-modal")?.classList.toggle("open", open);
+}
+
+function openCompareModal() {
+  if (compareIds.length < 2) return toast("Pick at least two products to compare");
+  const items = compareIds.map((pid) => products.find((p) => p.id === pid)).filter(Boolean);
+  const body = $("#compare-body");
+  if (!body) return;
+  const row = (label, fn) => `<tr><td>${label}</td>${items.map((p) => `<td>${fn(p)}</td>`).join("")}</tr>`;
+  body.innerHTML = `<table class="compare-table"><thead><tr><th></th>${items.map((p) => `<th>${escapeHtml(p.name)}</th>`).join("")}</tr></thead><tbody>
+    ${row("Image", (p) => `<img src="${escapeHtml(p.img)}" alt="${escapeHtml(p.name)}" />`)}
+    ${row("Price", (p) => `<strong style="color:var(--red)">${money(p.price)}</strong>`)}
+    ${row("Rating", (p) => (p.rating ? `${stars(Math.round(p.rating))} ${p.rating} (${p.reviewCount})` : "—"))}
+    ${row("Brand", (p) => escapeHtml(p.brand || "—"))}
+    ${row("Country", (p) => escapeHtml(p.origin || "—"))}
+    ${row("Stock", (p) => Number(p.stock ?? 0))}
+    ${row("Colours", (p) => (p.colors || []).map((c) => `<span class="color-dot" style="display:inline-block;background:${safeColor(c)}"></span>`).join(" "))}
+    ${row("Action", (p) => `<button class="cart-btn" data-id="${p.id}">Add to Cart</button>`)}
+  </tbody></table>`;
+  setCompareOpen(true);
+}
+
+/* ---------------- checkout flow ---------------- */
+
+function setCheckoutOpen(open) {
+  $("#checkout-overlay")?.classList.toggle("open", open);
+  $("#checkout-modal")?.classList.toggle("open", open);
+}
+
+function openCheckout() {
+  if (!cartItems.length) return toast("Your cart is empty");
+  setCheckoutOpen(true);
+  loadCheckout();
+}
+
+async function loadCheckout() {
+  const body = $("#checkout-body");
+  if (!body) return;
+  let addresses = [];
+  if (useApi) {
+    try {
+      const data = await api("/addresses");
+      addresses = data.addresses;
+      if (!checkoutState.addressId || !addresses.some((a) => a.id === checkoutState.addressId)) {
+        checkoutState.addressId = data.defaultId;
+      }
+    } catch { useApi = false; }
+  }
+  const count = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const discount = appliedCoupon?.discount || 0;
+  const fee = checkoutState.delivery === "standard" ? (subtotal >= 200 ? 0 : 10) : checkoutState.delivery === "express" ? 25 : 0;
+  const shipping = appliedCoupon?.code === "FREESHIP" ? 0 : fee;
+  const total = Math.max(0, subtotal - discount + shipping);
+  const deliveryOptions = [
+    ["standard", "Standard · 3–5 days", subtotal >= 200 ? "Free" : "¥ 10"],
+    ["express", "Express · next day", "¥ 25"],
+    ["pickup", "Store pickup", "Free"],
+  ];
+  body.innerHTML = `
+    <div class="checkout-section"><h4>1. Delivery address</h4>
+      <div class="address-grid">${addresses.length
+        ? addresses.map((a) => `<div class="address-card ${a.id === checkoutState.addressId ? "selected" : ""}" data-address="${Number(a.id)}">${a.isDefault ? "<b>Default</b>" : ""}<strong>${escapeHtml(a.name)}</strong> · ${escapeHtml(a.phone)}<small>${escapeHtml(a.line1)}${a.line2 ? ", " + escapeHtml(a.line2) : ""}</small><small>${escapeHtml(a.city)} ${escapeHtml(a.region)} ${escapeHtml(a.postal)}</small></div>`).join("")
+        : `<p class="cart-empty" style="padding:10px">No saved addresses yet — add one below.</p>`}</div>
+      <button class="ghost-btn" id="address-add-toggle">+ Add a new address</button>
+      <form class="address-form" id="address-form" hidden>
+        <input name="name" placeholder="Full name" required /><input name="phone" placeholder="Phone" required />
+        <input class="wide" name="line1" placeholder="Street address" required />
+        <input name="city" placeholder="City" /><input name="postal" placeholder="Postal code" />
+        <label class="wide"><input type="checkbox" name="isDefault" /> Save as default</label>
+        <button class="cart-btn wide" type="submit">Save address</button>
+      </form>
+    </div>
+    <div class="checkout-section"><h4>2. Delivery method</h4><div class="option-row">
+      ${deliveryOptions.map(([key, label, price]) => `<label class="${checkoutState.delivery === key ? "selected" : ""}" data-delivery="${key}">${label} <small>${price}</small></label>`).join("")}
+    </div></div>
+    <div class="checkout-section"><h4>3. Payment</h4><div class="option-row">
+      ${["Card", "Cash on delivery", "Wallet"].map((p) => `<label class="${checkoutState.payment === p ? "selected" : ""}" data-payment="${p}">${p}</label>`).join("")}
+    </div></div>
+    <div class="summary-box">
+      <div class="summary-row"><span>Subtotal (${count} item${count === 1 ? "" : "s"})</span><span>${money(subtotal)}</span></div>
+      ${discount ? `<div class="summary-row"><span>Coupon ${appliedCoupon.code}</span><span>- ${money(discount)}</span></div>` : ""}
+      <div class="summary-row"><span>Shipping</span><span>${shipping ? money(shipping) : "Free"}</span></div>
+      <div class="summary-row total"><span>Total</span><span>${money(total)}</span></div>
+    </div>
+    <div class="checkout-actions"><button class="ghost-btn" id="checkout-cancel">Cancel</button><button class="cart-btn" id="place-order">Place Order</button></div>`;
+}
+
+async function placeOrder() {
+  if (!useApi) {
+    setCheckoutOpen(false);
+    checkout();
+    return;
+  }
+  try {
+    const order = await api("/checkout", {
+      method: "POST",
+      body: JSON.stringify({
+        addressId: checkoutState.addressId,
+        delivery: checkoutState.delivery,
+        payment: checkoutState.payment,
+        code: appliedCoupon?.code,
+      }),
+    });
+    appliedCoupon = null;
+    const codeInput = $("#coupon-code");
+    if (codeInput) codeInput.value = "";
+    setCheckoutOpen(false);
+    setCartOpen(false);
+    await loadCart();
+    toast(`Order #${order.id} placed! You earned ${order.pointsEarned} points.`);
+    openOrders();
+  } catch (error) { toast(error.message); }
+}
+
+/* ---------------- admin dashboard ---------------- */
+
+function setAdminOpen(open) {
+  $("#admin-view")?.classList.toggle("open", open);
+  document.body.style.overflow = open ? "hidden" : "";
+}
+
+async function loadAdmin() {
+  const content = $("#admin-content");
+  if (!content) return;
+  content.innerHTML = `<p class="cart-empty">Loading…</p>`;
+  let data;
+  const endpoint = adminTab === "overview" ? "stats" : adminTab;
+  try { data = await api(`/admin/${endpoint}`); }
+  catch (error) { content.innerHTML = `<p class="cart-empty">${escapeHtml(error.message)}</p>`; return; }
+
+  if (adminTab === "overview") {
+    const cards = [["Users", data.users], ["Orders", data.orders], ["Revenue", money(data.revenue)], ["Products", data.products]];
+    content.innerHTML = `
+      <div class="admin-grid">${cards.map(([label, value]) => `<div class="admin-card"><b>${value}</b><span>${label}</span></div>`).join("")}</div>
+      <div class="admin-grid" style="margin-top:12px"><div class="admin-card"><b>${data.lowStock}</b><span>Low stock items</span></div><div class="admin-card"><b>${data.reviews}</b><span>Reviews</span></div><div class="admin-card"><b>${data.avgRating || "—"}</b><span>Average rating</span></div></div>
+      <div class="admin-panel"><h3>Recent orders</h3><table class="admin-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th></tr></thead><tbody>${data.recentOrders.map((o) => `<tr><td>${escapeHtml(o.id)}</td><td>${escapeHtml(o.ownerName)}</td><td>${o.items.reduce((s, i) => s + Number(i.quantity), 0)}</td><td>${money(o.total)}</td><td>${escapeHtml(o.status)}</td></tr>`).join("") || `<tr><td colspan="5">No orders yet</td></tr>`}</tbody></table></div>
+      <div class="admin-panel"><h3>Top rated products</h3><table class="admin-table"><thead><tr><th>Product</th><th>Rating</th><th>Reviews</th><th>Stock</th></tr></thead><tbody>${data.topProducts.map((p) => `<tr><td>${escapeHtml(p.name)}</td><td>${Number(p.rating)} ★</td><td>${Number(p.reviewCount)}</td><td>${Number(p.stock)}</td></tr>`).join("") || `<tr><td colspan="4">No reviews yet</td></tr>`}</tbody></table></div>`;
+  }
+
+  if (adminTab === "products") {
+    content.innerHTML = `
+      <div class="admin-panel"><h3>Add a product</h3>
+        <form class="admin-form" id="admin-product-form">
+          <input name="name" placeholder="Product name" required /><input name="price" type="number" step="0.01" placeholder="Price" required /><input name="stock" type="number" placeholder="Stock" />
+          <input name="brand" placeholder="Brand" /><input name="origin" placeholder="Country" /><input name="tag" placeholder="Category" />
+          <input class="wide" name="description" placeholder="Description" /><input class="wide" name="img" placeholder="Image URL (optional)" />
+          <label><input type="checkbox" name="new" /> New arrival</label><label><input type="checkbox" name="global" /> Global find</label>
+          <button type="submit">Add product</button>
+        </form>
+      </div>
+      <div class="admin-panel"><h3>All products (${data.products.length})</h3><table class="admin-table"><thead><tr><th></th><th>Name</th><th>Price</th><th>Stock</th><th>Rating</th><th>Actions</th></tr></thead><tbody>
+        ${data.products.map((p) => `<tr><td><img src="${escapeHtml(p.img)}" alt="" /></td><td>${escapeHtml(p.name)}<br /><small>${escapeHtml(p.brand)} · ${escapeHtml(p.origin)}</small></td><td>${money(p.price)}</td><td><input type="number" min="0" max="1000000" step="1" style="width:62px" value="${Number(p.stock)}" data-stock="${Number(p.id)}" /></td><td>${p.rating ? Number(p.rating) : "—"} (${Number(p.reviewCount)})</td><td><button class="mini-btn" data-save="${Number(p.id)}">Save</button></td></tr>`).join("")}
+      </tbody></table></div>`;
+  }
+
+  if (adminTab === "orders") {
+    content.innerHTML = `<div class="admin-panel"><h3>All orders (${data.orders.length})</h3><table class="admin-table"><thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Delivery</th><th>Status</th></tr></thead><tbody>
+      ${data.orders.map((o) => `<tr><td>${escapeHtml(o.id)}<br /><small>${escapeHtml(new Date(o.createdAt).toLocaleDateString())}</small></td><td>${escapeHtml(o.ownerName)}</td><td>${o.items.reduce((s, i) => s + Number(i.quantity), 0)}</td><td>${money(o.total)}</td><td>${escapeHtml(o.delivery?.label || "Standard")}</td><td><select class="status-select" data-order="${escapeHtml(o.id)}">${["Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"].map((s) => `<option value="${s}" ${s === o.status ? "selected" : ""}>${s}</option>`).join("")}</select></td></tr>`).join("") || `<tr><td colspan="6">No orders yet</td></tr>`}
+    </tbody></table></div>`;
+  }
+
+  if (adminTab === "users") {
+    content.innerHTML = `<div class="admin-panel"><h3>All users (${data.users.length})</h3><table class="admin-table"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Orders</th><th>Spent</th><th>Points</th><th>Joined</th></tr></thead><tbody>
+      ${data.users.map((u) => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.role)}</td><td>${Number(u.orders)}</td><td>${money(u.spent)}</td><td>${Number(u.points)}</td><td>${escapeHtml(new Date(u.joined).toLocaleDateString())}</td></tr>`).join("")}
+    </tbody></table></div>`;
+  }
 }
 
 /* ---------------- global finds ---------------- */
@@ -704,10 +944,10 @@ function populateGlobalFilters() {
   const category = $("#global-category");
   const visualCategory = $("#visual-category");
   const chips = $("#global-chips");
-  if (origin) origin.innerHTML = `<option value="">All countries</option>${facets.origins.map((o) => `<option value="${o}">${o}</option>`).join("")}`;
-  if (category) category.innerHTML = `<option value="">All categories</option>${facets.categories.map((c) => `<option value="${c}">${c}</option>`).join("")}`;
-  if (visualCategory && !visualCategory.options.length) visualCategory.innerHTML = `<option value="">Any category</option>${facets.categories.map((c) => `<option value="${c}">${c}</option>`).join("")}`;
-  if (chips) chips.innerHTML = ["All", ...facets.origins].map((o, i) => `<button class="chip ${i === 0 ? "active" : ""}" data-origin="${o}">${o}</button>`).join("");
+  if (origin) origin.innerHTML = `<option value="">All countries</option>${facets.origins.map((o) => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join("")}`;
+  if (category) category.innerHTML = `<option value="">All categories</option>${facets.categories.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")}`;
+  if (visualCategory && !visualCategory.options.length) visualCategory.innerHTML = `<option value="">Any category</option>${facets.categories.map((c) => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("")}`;
+  if (chips) chips.innerHTML = ["All", ...facets.origins].map((o, i) => `<button class="chip ${i === 0 ? "active" : ""}" data-origin="${escapeHtml(o)}">${escapeHtml(o)}</button>`).join("");
 }
 
 function globalQuery() {
@@ -758,16 +998,16 @@ async function openDetail(id) {
   const content = $("#detail-content");
   if (!content) return;
   content.innerHTML = `
-    <img src="${product.img}" alt="${product.name}" />
+    <img src="${escapeHtml(product.img)}" alt="${escapeHtml(product.name)}" />
     <div class="detail-info">
-      <h3>${product.name}</h3>
+      <h3>${escapeHtml(product.name)}</h3>
       <p class="detail-price">${money(product.price)}</p>
-      <p class="detail-meta">Brand: <b>${product.brand || "Tmall"}</b><br />
-        From: <b>${product.origin || "China"}</b><br />
-        Category: <b>${product.tag || "General"}</b><br />
+      <p class="detail-meta">Brand: <b>${escapeHtml(product.brand || "Tmall")}</b><br />
+        From: <b>${escapeHtml(product.origin || "China")}</b><br />
+        Category: <b>${escapeHtml(product.tag || "General")}</b><br />
         In stock: <b>${product.stock ?? "Available"}</b></p>
-      <div class="color-dots">${(product.colors || []).map((c) => `<span class="color-dot" style="background:${c}" title="${c}"></span>`).join("")}</div>
-      <p class="detail-desc">${product.description || "A quality pick from Tmall."}</p>
+      <div class="color-dots">${(product.colors || []).map((c) => `<span class="color-dot" style="background:${safeColor(c)}" title="${escapeHtml(safeColor(c))}"></span>`).join("")}</div>
+      <p class="detail-desc">${escapeHtml(product.description || "A quality pick from Tmall.")}</p>
       <div class="detail-actions">
         <button class="cart-btn" data-id="${product.id}">Add to Cart</button>
         <button class="ghost-btn" id="detail-similar" data-id="${product.id}">📷 Find similar</button>
@@ -848,7 +1088,7 @@ async function handleVisualFile(file) {
     visual.palette = features.palette;
     const preview = $("#visual-preview");
     if (preview) {
-      preview.innerHTML = `<img src="${features.dataUrl}" alt="Your upload" /><div><strong>Photo ready</strong><p>Colours spotted: ${features.palette.map((c) => `<span class="color-dot" style="display:inline-block;background:${c}"></span>`).join(" ")} ${features.palette.join(" · ")}</p></div>`;
+      preview.innerHTML = `<img src="${features.dataUrl}" alt="Your upload" /><div><strong>Photo ready</strong><p>Colours spotted: ${features.palette.map((c) => `<span class="color-dot" style="display:inline-block;background:${safeColor(c)}"></span>`).join(" ")} ${features.palette.map(escapeHtml).join(" · ")}</p></div>`;
       preview.classList.add("show");
     }
     const category = $("#visual-category")?.value || "";
@@ -880,8 +1120,8 @@ function renderVisualMatches(matches) {
       `<div class="visual-grid">${matches.map((p) => `
         <div class="match-card" data-id="${p.id}">
           <span class="match-badge">${p.score}% match</span>
-          <img src="${p.img}" alt="${p.name}" loading="lazy" />
-          <p>${p.name}</p>
+          <img src="${escapeHtml(p.img)}" alt="${escapeHtml(p.name)}" loading="lazy" />
+          <p>${escapeHtml(p.name)}</p>
           <strong>${money(p.price)}</strong>
           <button class="cart-btn" data-id="${p.id}">Add to Cart</button>
         </div>`).join("")}</div>`
@@ -900,7 +1140,7 @@ function findSimilarToProduct(id) {
   openVisual();
   const preview = $("#visual-preview");
   if (preview) {
-    preview.innerHTML = `<img src="${product.img}" alt="${product.name}" /><div><strong>Similar to ${product.name}</strong><p>Matched using its colour palette</p></div>`;
+    preview.innerHTML = `<img src="${escapeHtml(product.img)}" alt="${escapeHtml(product.name)}" /><div><strong>Similar to ${escapeHtml(product.name)}</strong><p>Matched using its colour palette</p></div>`;
     preview.classList.add("show");
   }
   renderVisualMatches(matches);
@@ -913,7 +1153,7 @@ async function loadRecentSearches() {
     const searches = (await api("/visual-searches")).searches;
     visual.recent = searches;
     container.innerHTML = searches.length
-      ? `<h4>Your recent visual searches</h4><div class="recent-row">${searches.map((s) => `<div class="recent-item" data-search="${s.id}"><img src="${s.imageUrl}" alt="Visual search" /><small>${new Date(s.createdAt).toLocaleDateString()}</small></div>`).join("")}</div>`
+      ? `<h4>Your recent visual searches</h4><div class="recent-row">${searches.map((s) => `<div class="recent-item" data-search="${escapeHtml(s.id)}"><img src="${escapeHtml(s.imageUrl)}" alt="Visual search" /><small>${escapeHtml(new Date(s.createdAt).toLocaleDateString())}</small></div>`).join("")}</div>`
       : "";
   } catch { /* ignore */ }
 }
@@ -963,8 +1203,10 @@ document.addEventListener("click", (event) => {
   if (!event.target.closest(".search-container")) $("#suggestions")?.classList.remove("show");
   const wishButton = event.target.closest(".wish-btn");
   if (wishButton) { event.stopPropagation(); toggleWishlist(wishButton.dataset.id); return; }
+  const compareButton = event.target.closest(".compare-btn");
+  if (compareButton) { event.stopPropagation(); toggleCompare(compareButton.dataset.id); return; }
   const cartButton = event.target.closest(".cart-btn");
-  if (cartButton) { event.stopPropagation(); addToCart(cartButton.dataset.id, cartButton); return; }
+  if (cartButton && !cartButton.closest("form, #checkout-modal")) { event.stopPropagation(); addToCart(cartButton.dataset.id, cartButton); return; }
   const card = event.target.closest(".product-card, .match-card");
   if (card && !event.target.closest("button")) openDetail(card.dataset.id);
 });
@@ -982,11 +1224,22 @@ $("#cart-toggle")?.addEventListener("click", () => setCartOpen(true));
 $(".head-action")?.addEventListener("click", (e) => { e.preventDefault(); setCartOpen(true); });
 $("#cart-sidebar-close")?.addEventListener("click", () => setCartOpen(false));
 $("#cart-overlay")?.addEventListener("click", () => setCartOpen(false));
-$(".checkout-btn")?.addEventListener("click", checkout);
+$(".checkout-btn")?.addEventListener("click", openCheckout);
 
 $("#orders-link")?.addEventListener("click", (e) => { e.preventDefault(); openOrders(); });
 $("#orders-close")?.addEventListener("click", () => setOrdersOpen(false));
 $("#orders-overlay")?.addEventListener("click", () => setOrdersOpen(false));
+
+$("#site-navigation-trigger")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  setSiteNavigationOpen(true);
+});
+$("#site-navigation-close")?.addEventListener("click", () => setSiteNavigationOpen(false));
+$("#site-navigation-overlay")?.addEventListener("click", () => setSiteNavigationOpen(false));
+document.querySelectorAll(".site-nav-grid a").forEach((link) => link.addEventListener("click", () => setSiteNavigationOpen(false)));
+$("#site-nav-global")?.addEventListener("click", () => { setSiteNavigationOpen(false); showGlobal(); });
+$("#site-nav-orders")?.addEventListener("click", () => { setSiteNavigationOpen(false); openOrders(); });
+$("#site-nav-favorites")?.addEventListener("click", () => { setSiteNavigationOpen(false); setWishlistOpen(true); loadWishlist(); });
 
 /* auth */
 $("#auth-trigger")?.addEventListener("click", (e) => { e.preventDefault(); currentUser ? openProfile() : openAuth("login"); });
@@ -1010,6 +1263,21 @@ $("#profile-close")?.addEventListener("click", closeProfile);
 $("#profile-overlay")?.addEventListener("click", closeProfile);
 $("#profile-body")?.addEventListener("click", async (event) => {
   if (event.target.closest("#profile-signin")) { closeProfile(); openAuth("login"); return; }
+  const redeem = event.target.closest("[data-redeem]");
+  if (redeem) {
+    try {
+      const result = await api("/rewards/redeem", { method: "POST", body: JSON.stringify({ rewardId: redeem.dataset.redeem }) });
+      toast(`Redeemed ${result.code} — ${result.points} points left`);
+      openProfile();
+    } catch (error) { toast(error.message); }
+    return;
+  }
+  if (event.target.closest("#profile-add-address")) {
+    closeProfile();
+    setCheckoutOpen(true);
+    loadCheckout();
+    return;
+  }
   const action = event.target.closest("[data-profile]")?.dataset.profile;
   if (!action) return;
   if (action === "orders") { closeProfile(); openOrders(); }
@@ -1101,6 +1369,113 @@ $("#global-chips")?.addEventListener("click", (event) => {
   if (origin) { origin.value = chip.dataset.origin === "All" ? "" : chip.dataset.origin; loadGlobal(); }
 });
 
+/* compare */
+$("#compare-clear")?.addEventListener("click", () => { compareIds = []; renderCompareBar(); });
+$("#compare-items")?.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-id]");
+  if (button) toggleCompare(button.dataset.id);
+});
+$("#compare-open")?.addEventListener("click", openCompareModal);
+$("#compare-close")?.addEventListener("click", () => setCompareOpen(false));
+$("#compare-overlay")?.addEventListener("click", () => setCompareOpen(false));
+
+/* checkout flow */
+$("#checkout-close")?.addEventListener("click", () => setCheckoutOpen(false));
+$("#checkout-overlay")?.addEventListener("click", () => setCheckoutOpen(false));
+$("#checkout-body")?.addEventListener("click", async (event) => {
+  const address = event.target.closest("[data-address]");
+  if (address) { checkoutState.addressId = Number(address.dataset.address); return loadCheckout(); }
+  const delivery = event.target.closest("[data-delivery]");
+  if (delivery) { checkoutState.delivery = delivery.dataset.delivery; return loadCheckout(); }
+  const payment = event.target.closest("[data-payment]");
+  if (payment) { checkoutState.payment = payment.dataset.payment; return loadCheckout(); }
+  if (event.target.closest("#address-add-toggle")) {
+    const form = $("#address-form");
+    if (form) form.hidden = !form.hidden;
+    return;
+  }
+  if (event.target.closest("#checkout-cancel")) return setCheckoutOpen(false);
+  if (event.target.closest("#place-order")) return placeOrder();
+});
+$("#checkout-body")?.addEventListener("submit", async (event) => {
+  if (event.target.id !== "address-form") return;
+  event.preventDefault();
+  const form = event.target;
+  const payload = Object.fromEntries(new FormData(form));
+  payload.isDefault = form.querySelector('[name="isDefault"]').checked;
+  try {
+    const address = await api("/addresses", { method: "POST", body: JSON.stringify(payload) });
+    checkoutState.addressId = address.id;
+    toast("Address saved");
+    loadCheckout();
+  } catch (error) { toast(error.message); }
+});
+
+/* admin */
+$("#admin-link")?.addEventListener("click", (event) => {
+  event.preventDefault();
+  if (currentUser?.role !== "admin") return toast("Admin access required");
+  setAdminOpen(true);
+  loadAdmin();
+});
+$("#admin-back")?.addEventListener("click", () => setAdminOpen(false));
+document.querySelectorAll(".admin-tab").forEach((tab) => tab.addEventListener("click", () => {
+  adminTab = tab.dataset.tab;
+  document.querySelectorAll(".admin-tab").forEach((t) => t.classList.toggle("active", t === tab));
+  loadAdmin();
+}));
+$("#admin-content")?.addEventListener("submit", async (event) => {
+  if (event.target.id !== "admin-product-form") return;
+  event.preventDefault();
+  const form = event.target;
+  const payload = Object.fromEntries(new FormData(form));
+  payload.new = form.querySelector('[name="new"]').checked;
+  payload.global = form.querySelector('[name="global"]').checked;
+  try {
+    await api("/admin/products", { method: "POST", body: JSON.stringify(payload) });
+    toast("Product added");
+    loadAdmin();
+    loadCatalog().then(() => { renderHome(products); loadRecommendations(); });
+  } catch (error) { toast(error.message); }
+});
+$("#admin-content")?.addEventListener("click", async (event) => {
+  const save = event.target.closest("[data-save]");
+  if (save) {
+    const id = Number(save.dataset.save);
+    const input = document.querySelector('[data-stock="' + id + '"]');
+    const stock = Number(input?.value);
+    if (!Number.isSafeInteger(stock) || stock < 0 || stock > 1_000_000) {
+      toast("Stock must be a whole number from 0 to 1,000,000");
+      return;
+    }
+    try {
+      await api(`/admin/products/${id}`, { method: "PATCH", body: JSON.stringify({ stock }) });
+      toast("Inventory updated");
+      loadAdmin();
+    } catch (error) { toast(error.message); }
+    return;
+  }
+  const remove = event.target.closest("[data-delete]");
+  if (remove) {
+    if (!confirm("Delete this product?")) return;
+    try {
+      await api(`/admin/products/${remove.dataset.delete}`, { method: "DELETE" });
+      toast("Product deleted");
+      loadAdmin();
+      loadCatalog().then(() => renderHome(products));
+    } catch (error) { toast(error.message); }
+  }
+});
+$("#admin-content")?.addEventListener("change", async (event) => {
+  const select = event.target.closest("select[data-order]");
+  if (!select) return;
+  try {
+    await api(`/admin/orders/${encodeURIComponent(select.dataset.order)}`, { method: "PATCH", body: JSON.stringify({ status: select.value }) });
+    toast("Order status updated");
+    loadAdmin();
+  } catch (error) { toast(error.message); }
+});
+
 /* carousel */
 $(".slider-btn.next")?.addEventListener("click", () => { goTo(current + 1); restartTimer(); });
 $(".slider-btn.prev")?.addEventListener("click", () => { goTo(current - 1); restartTimer(); });
@@ -1108,7 +1483,7 @@ dots.forEach((dot, i) => dot.addEventListener("click", () => { goTo(i); restartT
 
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
-  setCartOpen(false); setOrdersOpen(false); setWishlistOpen(false); closeAuth(); closeDetail(); closeVisual(); closeProfile(); hideGlobal();
+  setCartOpen(false); setOrdersOpen(false); setWishlistOpen(false); setSiteNavigationOpen(false); setCompareOpen(false); setCheckoutOpen(false); closeAuth(); closeDetail(); closeVisual(); closeProfile(); hideGlobal(); setAdminOpen(false);
 });
 
 /* ---------------- init ---------------- */
