@@ -1,0 +1,12 @@
+{
+  "name": "tmall-clone",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tmall homepage clone with a zero-dependency Node backend",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
