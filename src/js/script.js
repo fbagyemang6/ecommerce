@@ -45,6 +45,11 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => 
 }[char]));
 const safeColor = (value) => /^#[0-9a-f]{6}$/i.test(String(value)) ? value : "#cccccc";
 let useApi = window.location.protocol !== "file:";
+let productOffset = 0; // track how many products have been shown
+const PAGE_SIZE = 8; // number of products per page
+let homeProductItems = [];
+let globalProductItems = [];
+let globalProductOffset = 0;
 let apiStartupError = "";
 let products = fallbackProducts;
 let facets = { categories: [], origins: [], brands: [] };
@@ -145,18 +150,66 @@ function renderInto(target, items, scores = {}) {
     : `<p class="empty-state">No products found. Try a different search.</p>`;
 }
 
-function renderHome(items) {
-  renderInto(wrapper, items);
-  const count = $("#product-count");
-  if (count) count.textContent = `Showing ${items.length} product${items.length === 1 ? "" : "s"}`;
+function appendInto(target, items, scores = {}) {
+  if (!target || !items.length) return;
+  target.insertAdjacentHTML("beforeend", items.map((p) => productCardHtml(p, scores[p.id])).join(""));
 }
+
+function renderHome(items, append = false) {
+  if (!wrapper) return;
+  if (!append) {
+    homeProductItems = items;
+    productOffset = 0;
+  }
+  const batch = homeProductItems.slice(productOffset, productOffset + PAGE_SIZE);
+  if (productOffset === 0) renderInto(wrapper, batch);
+  else appendInto(wrapper, batch);
+  productOffset += batch.length;
+
+  const count = $("#product-count");
+  if (count) count.textContent = "Showing " + productOffset + " of " + homeProductItems.length + " products";
+  const loadMoreBtn = $("#load-more");
+  if (loadMoreBtn) {
+    const remaining = homeProductItems.length - productOffset;
+    loadMoreBtn.hidden = remaining <= 0;
+    loadMoreBtn.textContent = "See more products";
+  }
+}
+
+function renderGlobalProducts(items, append = false) {
+  const target = $("#global-products");
+  if (!target) return;
+  if (!append) {
+    globalProductItems = items;
+    globalProductOffset = 0;
+  }
+  const batch = globalProductItems.slice(globalProductOffset, globalProductOffset + PAGE_SIZE);
+  if (globalProductOffset === 0) renderInto(target, batch);
+  else appendInto(target, batch);
+  globalProductOffset += batch.length;
+
+  const stats = $("#global-stats");
+  if (stats) stats.textContent = "Showing " + globalProductOffset + " of " + globalProductItems.length + " global finds · " + facets.origins.length + " countries to explore";
+  const loadMoreBtn = $("#global-load-more");
+  if (loadMoreBtn) {
+    const remaining = globalProductItems.length - globalProductOffset;
+    loadMoreBtn.hidden = remaining <= 0;
+    loadMoreBtn.textContent = "See more products";
+  }
+}
+/* ---------------- load more ---------------- */
+
+$("#load-more")?.addEventListener("click", () => renderHome(homeProductItems, true));
 
 function applyFilters() {
   const term = (searchInput?.value || "").trim().toLowerCase();
   const filter = $(".filter-pill.selected")?.dataset.filter || "all";
   if (useApi) {
     api(`/products?search=${encodeURIComponent(term)}&filter=${filter}`)
-      .then((data) => renderHome(data.products))
+      .then((data) => {
+        productOffset = 0; // reset pagination
+        renderHome(data.products);
+      })
       .catch(() => {
         useApi = false;
         renderHome(homeFallback(term, filter));
@@ -964,7 +1017,6 @@ function globalQuery() {
 }
 
 async function loadGlobal() {
-  const stats = $("#global-stats");
   let items;
   if (useApi) {
     try {
@@ -982,8 +1034,7 @@ async function loadGlobal() {
     if (params.get("sort") === "price_asc") items.sort((a, b) => a.price - b.price);
     if (params.get("sort") === "price_desc") items.sort((a, b) => b.price - a.price);
   }
-  renderInto($("#global-products"), items);
-  if (stats) stats.textContent = `${items.length} global product${items.length === 1 ? "" : "s"} found · ${facets.origins.length} countries to explore`;
+  renderGlobalProducts(items);
 }
 
 /* ---------------- product detail ---------------- */
@@ -1360,6 +1411,7 @@ $("#recent-searches")?.addEventListener("click", (event) => {
 $("#global-back")?.addEventListener("click", hideGlobal);
 ["#global-origin", "#global-category", "#global-sort"].forEach((selector) => $(selector)?.addEventListener("change", loadGlobal));
 $("#global-search")?.addEventListener("input", () => { clearTimeout(searchTimer); searchTimer = setTimeout(loadGlobal, 180); });
+$("#global-load-more")?.addEventListener("click", () => renderGlobalProducts(globalProductItems, true));
 $("#global-chips")?.addEventListener("click", (event) => {
   const chip = event.target.closest(".chip");
   if (!chip) return;
