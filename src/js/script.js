@@ -45,6 +45,8 @@ const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => 
 }[char]));
 const safeColor = (value) => /^#[0-9a-f]{6}$/i.test(String(value)) ? value : "#cccccc";
 let useApi = window.location.protocol !== "file:";
+let productOffset = 0; // track how many products have been shown
+const PAGE_SIZE = 8; // number of products per page
 let apiStartupError = "";
 let products = fallbackProducts;
 let facets = { categories: [], origins: [], brands: [] };
@@ -145,24 +147,50 @@ function renderInto(target, items, scores = {}) {
     : `<p class="empty-state">No products found. Try a different search.</p>`;
 }
 
-function renderHome(items) {
-  renderInto(wrapper, items);
+function renderHome(items, page) {
+  page = page !== undefined ? page : 1;
+  productOffset = (page - 1) * PAGE_SIZE;
+  const pageItems = items.slice(productOffset, productOffset + PAGE_SIZE);
+  renderInto(wrapper, pageItems);
   const count = $("#product-count");
-  if (count) count.textContent = `Showing ${items.length} product${items.length === 1 ? "" : "s"}`;
+  if (count) count.textContent = `Showing ${pageItems.length} of ${items.length} product${pageItems.length === 1 ? "" : "s"}`;
+
+  // show/hide load more button
+  const loadMoreBtn = $("#load-more");
+  if (loadMoreBtn) {
+    if (productOffset + PAGE_SIZE < items.length) {
+      loadMoreBtn.classList.remove("hidden");
+    } else {
+      loadMoreBtn.classList.add("hidden");
+    }
+  }
 }
+/* ---------------- load more ---------------- */
+
+$("#load-more")?.addEventListener("click", () => {
+  const currentPage = Math.ceil((productOffset + PAGE_SIZE) / PAGE_SIZE) + 1;
+  const term = (searchInput?.value || "").trim().toLowerCase();
+  const filter = $(".filter-pill.selected")?.dataset.filter || "all";
+  api(`/products?search=${encodeURIComponent(term)}&filter=${filter}`)
+    .then((data) => renderHome(data.products, currentPage))
+    .catch(() => { useApi = false; renderHome(homeFallback(term, filter), currentPage); });
+});
 
 function applyFilters() {
   const term = (searchInput?.value || "").trim().toLowerCase();
   const filter = $(".filter-pill.selected")?.dataset.filter || "all";
   if (useApi) {
     api(`/products?search=${encodeURIComponent(term)}&filter=${filter}`)
-      .then((data) => renderHome(data.products))
+      .then((data) => {
+        productOffset = 0; // reset pagination
+        renderHome(data.products, 1);
+      })
       .catch(() => {
         useApi = false;
-        renderHome(homeFallback(term, filter));
+        renderHome(homeFallback(term, filter), 1);
       });
   } else {
-    renderHome(homeFallback(term, filter));
+    renderHome(homeFallback(term, filter), 1);
   }
 }
 
