@@ -1,31 +1,952 @@
 [
-  { "id": 1, "name": "Roller eraser for elementary school", "price": 2.5, "tag": "Stationery", "origin": "China", "brand": "M&G", "stock": 15, "new": false, "global": false, "colors": ["#f5b7c4", "#ffe3ec", "#8fd3d1"], "description": "A fun, clean roller eraser that lifts marks without tearing paper. A classroom favourite.", "img": "https://img.alicdn.com/bao/uploaded/i2/3862696800/O1CN01rO2CJd206S8AoMDgS_!!0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 2, "name": "Anti-Myopia stitched notebook for students", "price": 5.05, "tag": "Stationery", "origin": "China", "brand": "Deli", "stock": 52, "new": false, "global": false, "colors": ["#c9a227", "#f0e0b0", "#8b5a2b"], "description": "Eye-friendly cream pages with durable stitched binding. Built for everyday notes.", "img": "https://img.alicdn.com/bao/uploaded/i3/2124153145/O1CN012bmdJF1Z6SiIMEv0x_!!4611686018427380025-0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 3, "name": "GT2 watch charger 2E charging cable", "price": 55.25, "tag": "Electronics", "origin": "China", "brand": "Huawei", "stock": 8, "new": true, "global": false, "colors": ["#2b2b2b", "#4a90d9", "#e0e0e0"], "description": "A snug magnetic charger made for GT2 smartwatches. Fast, steady and travel friendly.", "img": "https://img.alicdn.com/bao/uploaded/i4/2219543796828/O1CN01RThleO20JHQlwT67O_!!4611686018427386972-0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 4, "name": "Wholesale phone holder with ring buckle", "price": 7.79, "tag": "Electronics", "origin": "China", "brand": "Baseus", "stock": 27, "new": false, "global": false, "colors": ["#e74c3c", "#2c3e50", "#f1c40f"], "description": "A sticky ring grip and stand in one. Keeps your phone secure in any orientation.", "img": "https://img.alicdn.com/bao/uploaded/i1/2209083264270/O1CN010YSHwm1hPiGos2xUl_!!2209083264270.jpg_460x460q90.jpg_.webp" },
-  { "id": 5, "name": "Disposable waterproof toilet seat cover", "price": 7.5, "tag": "Home", "origin": "China", "brand": "HomeCare", "stock": 22, "new": false, "global": false, "colors": ["#ffffff", "#dfe9ec", "#b0bec5"], "description": "Individually wrapped, waterproof and comfortable. Peace of mind wherever you go.", "img": "https://img.alicdn.com/bao/uploaded/i4/2219902819204/O1CN01hpvBoC2HrUVKOJ8k0_!!2219902819204.jpg_460x460q90.jpg_.webp" },
-  { "id": 6, "name": "Operating room sandals, medical clogs", "price": 45.9, "tag": "Fashion", "origin": "China", "brand": "MedStep", "stock": 32, "new": false, "global": false, "colors": ["#1a1a1a", "#333333", "#555555"], "description": "Lightweight, easy-clean clogs designed for long shifts and busy days.", "img": "https://img.alicdn.com/bao/uploaded/i3/2216300976695/O1CN01gS8v2f1zKMk4L18ms_!!4611686018427386423-0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 7, "name": "Car perfume and air freshener", "price": 38.75, "tag": "Auto", "origin": "China", "brand": "Lincoln", "stock": 45, "new": false, "global": false, "colors": ["#b08d57", "#f5e6cc", "#3f3f3f"], "description": "A subtle, long-lasting car fragrance that keeps every drive fresh.", "img": "https://img.alicdn.com/bao/uploaded/i3/2218742651986/O1CN01MopT3a1QXdgKFXVZE_!!2218742651986.jpg_460x460q90.jpg_.webp" },
-  { "id": 8, "name": "Soft sterile disposable underwear", "price": 110.55, "tag": "Fashion", "origin": "China", "brand": "CottonLab", "stock": 11, "new": false, "global": false, "colors": ["#d8d8d8", "#b0bec5", "#f5f5f5"], "description": "Individually packed, breathable and comfortable. Ideal for travel and hospital stays.", "img": "https://img.alicdn.com/bao/uploaded/i2/2217618979812/O1CN01wkXatR2MLxK1JSEjP_!!4611686018427386852-0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 9, "name": "Titanium gray frosted case for iPhone", "price": 69.1, "tag": "Electronics", "origin": "China", "brand": "Spigen", "stock": 56, "new": true, "global": false, "colors": ["#5b5b5b", "#8e8e8e", "#2f2f2f"], "description": "A slim matte case with a soft-touch finish and a precise camera cut-out.", "img": "https://img.alicdn.com/bao/uploaded/i2/2218612120115/O1CN01aDhM131CiieOAh2O4_!!4611686018427386419-0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 10, "name": "German ultra-loud wireless Bluetooth speaker", "price": 67.6, "tag": "Electronics", "origin": "Germany", "brand": "Teufel", "stock": 16, "new": true, "global": true, "colors": ["#2c2c2c", "#00bcd4", "#7b1fa2"], "description": "Rich room-filling sound in a compact body, with a long-lasting battery.", "img": "https://img.alicdn.com/bao/uploaded/i2/2208457612939/O1CN01zqDlsy1Xa75A9CCt0_!!4611686018427387531-0-item_pic.jpg_460x460q90.jpg_.webp" },
-  { "id": 11, "name": "ASUS Fearless 16-core Ultra 5 laptop", "price": 8970.7, "tag": "Electronics", "origin": "China", "brand": "ASUS", "stock": 4, "new": true, "global": false, "colors": ["#c0c0c0", "#2b2b2b", "#1e88e5"], "description": "A powerful 16-core laptop with a bright display, built for work and creation.", "img": "https://img.alicdn.com/bao/uploaded/i3/686773455/O1CN01uzEl501bORWwiJKP4_!!4611686018427385039-0-item_pic.jpg_460x460q90.jpg_.webp" },
-
-  { "id": 12, "name": "Minimalist Leather Watch", "price": 268, "tag": "Fashion", "origin": "Germany", "brand": "Aured", "stock": 18, "new": true, "global": true, "colors": ["#8d6e63", "#d7ccc8", "#3e2723"], "description": "Clean lines and a genuine leather strap. Understated German design for every day.", "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=460&h=460&fit=crop" },
-  { "id": 13, "name": "Classic Red Sneakers", "price": 429, "tag": "Fashion", "origin": "USA", "brand": "Runway", "stock": 24, "new": true, "global": true, "colors": ["#d32f2f", "#ffffff", "#212121"], "description": "A bold everyday sneaker with cushioned soles and a timeless silhouette.", "img": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=460&h=460&fit=crop" },
-  { "id": 14, "name": "Studio Wireless Headphones", "price": 599, "tag": "Electronics", "origin": "USA", "brand": "Soundwave", "stock": 12, "new": false, "global": true, "colors": ["#212121", "#616161", "#e0e0e0"], "description": "Warm, detailed sound with plush earcups for all-day listening comfort.", "img": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=460&h=460&fit=crop" },
-  { "id": 15, "name": "Mirrorless Camera Kit", "price": 3299, "tag": "Electronics", "origin": "Japan", "brand": "Sora", "stock": 6, "new": true, "global": true, "colors": ["#2f2f2f", "#b0bec5", "#37474f"], "description": "A compact mirrorless camera with crisp detail and a versatile kit lens.", "img": "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=460&h=460&fit=crop" },
-  { "id": 16, "name": "Apex Smart Watch Series 8", "price": 899, "tag": "Electronics", "origin": "USA", "brand": "Apex", "stock": 21, "new": true, "global": true, "colors": ["#212121", "#42a5f5", "#eeeeee"], "description": "Track workouts, sleep and notifications from a bright, always-on display.", "img": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=460&h=460&fit=crop" },
-  { "id": 17, "name": "Polarized Sunglasses", "price": 219, "tag": "Fashion", "origin": "Italy", "brand": "Luce", "stock": 33, "new": false, "global": true, "colors": ["#212121", "#5d4037", "#c9a227"], "description": "Italian-crafted frames with polarized lenses that cut glare beautifully.", "img": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=460&h=460&fit=crop" },
-  { "id": 18, "name": "Noise-Cancelling Over-Ear Headphones", "price": 749, "tag": "Electronics", "origin": "Germany", "brand": "Aural", "stock": 14, "new": true, "global": true, "colors": ["#1a1a1a", "#37474f", "#90a4ae"], "description": "Quiet the world with soft earcups and rich, balanced sound.", "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=460&h=460&fit=crop" },
-  { "id": 19, "name": "Everyday Leather Tote", "price": 389, "tag": "Fashion", "origin": "Italy", "brand": "Bella", "stock": 19, "new": false, "global": true, "colors": ["#8d6e63", "#5d4037", "#d7ccc8"], "description": "A roomy, softly structured tote in supple leather. Made to last for years.", "img": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=460&h=460&fit=crop" },
-  { "id": 20, "name": "Lightweight Running Shoes", "price": 359, "tag": "Sports", "origin": "USA", "brand": "Stride", "stock": 28, "new": true, "global": true, "colors": ["#f5f5f5", "#ef5350", "#42a5f5"], "description": "Breathable mesh and a springy sole for easy, comfortable miles.", "img": "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=460&h=460&fit=crop" },
-  { "id": 21, "name": "Hydrating Skincare Set", "price": 259, "tag": "Beauty", "origin": "South Korea", "brand": "Lumi", "stock": 40, "new": true, "global": true, "colors": ["#f8bbd0", "#fce4ec", "#ffffff"], "description": "A gentle three-step routine that leaves skin calm, soft and dewy.", "img": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=460&h=460&fit=crop" },
-  { "id": 22, "name": "Radiance Makeup Kit", "price": 319, "tag": "Beauty", "origin": "France", "brand": "Roseau", "stock": 17, "new": false, "global": true, "colors": ["#d81b60", "#f48fb1", "#f8bbd0"], "description": "A curated palette of flattering shades for an effortless everyday look.", "img": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=460&h=460&fit=crop" },
-  { "id": 23, "name": "Classic Canvas Backpack", "price": 279, "tag": "Fashion", "origin": "UK", "brand": "Heritage", "stock": 26, "new": false, "global": true, "colors": ["#5d4037", "#8d6e63", "#d7ccc8"], "description": "A durable canvas backpack with a padded laptop sleeve and timeless style.", "img": "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=460&h=460&fit=crop" },
-  { "id": 24, "name": "Street Style Sneakers", "price": 459, "tag": "Fashion", "origin": "USA", "brand": "Urban", "stock": 15, "new": true, "global": true, "colors": ["#ffffff", "#212121", "#b0bec5"], "description": "A clean, versatile low-top that pairs with just about everything.", "img": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=460&h=460&fit=crop" },
-  { "id": 25, "name": "Anti-Ageing Brightening Serum", "price": 429, "tag": "Beauty", "origin": "Japan", "brand": "Mizuki", "stock": 22, "new": true, "global": true, "colors": ["#e6c27a", "#fff3d6", "#c48b3a"], "description": "A lightweight serum that helps skin look brighter and more even.", "img": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=460&h=460&fit=crop" },
-  { "id": 26, "name": "Premium Leather Wallet", "price": 299, "tag": "Fashion", "origin": "Italy", "brand": "Ferrara", "stock": 31, "new": false, "global": true, "colors": ["#3e2723", "#6d4c41", "#a1887f"], "description": "Slim, hand-finished leather with room for cards and notes.", "img": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=460&h=460&fit=crop" },
-  { "id": 27, "name": "Casual Canvas Shoes", "price": 239, "tag": "Fashion", "origin": "France", "brand": "Bleu", "stock": 37, "new": false, "global": true, "colors": ["#1565c0", "#ffffff", "#90caf9"], "description": "Easy-going canvas shoes with a cushioned insole and a fresh blue finish.", "img": "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=460&h=460&fit=crop" },
-  { "id": 28, "name": "Vintage Frame Sunglasses", "price": 189, "tag": "Fashion", "origin": "USA", "brand": "Vista", "stock": 44, "new": false, "global": true, "colors": ["#212121", "#d7a86e", "#424242"], "description": "Retro-inspired frames with warm lenses and a comfortable fit.", "img": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=460&h=460&fit=crop" }
+  {
+    "id": 1,
+    "name": "Roller eraser for elementary school",
+    "price": 2.5,
+    "tag": "Stationery",
+    "origin": "China",
+    "brand": "M&G",
+    "stock": 15,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#f5b7c4",
+      "#ffe3ec",
+      "#8fd3d1"
+    ],
+    "description": "A fun, clean roller eraser that lifts marks without tearing paper. A classroom favourite.",
+    "img": "https://img.alicdn.com/bao/uploaded/i2/3862696800/O1CN01rO2CJd206S8AoMDgS_!!0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 2,
+    "name": "Anti-Myopia stitched notebook for students",
+    "price": 5.05,
+    "tag": "Stationery",
+    "origin": "China",
+    "brand": "Deli",
+    "stock": 52,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#c9a227",
+      "#f0e0b0",
+      "#8b5a2b"
+    ],
+    "description": "Eye-friendly cream pages with durable stitched binding. Built for everyday notes.",
+    "img": "https://img.alicdn.com/bao/uploaded/i3/2124153145/O1CN012bmdJF1Z6SiIMEv0x_!!4611686018427380025-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 3,
+    "name": "GT2 watch charger 2E charging cable",
+    "price": 55.25,
+    "tag": "Electronics",
+    "origin": "China",
+    "brand": "Huawei",
+    "stock": 8,
+    "new": true,
+    "global": false,
+    "colors": [
+      "#2b2b2b",
+      "#4a90d9",
+      "#e0e0e0"
+    ],
+    "description": "A snug magnetic charger made for GT2 smartwatches. Fast, steady and travel friendly.",
+    "img": "https://img.alicdn.com/bao/uploaded/i4/2219543796828/O1CN01RThleO20JHQlwT67O_!!4611686018427386972-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 4,
+    "name": "Wholesale phone holder with ring buckle",
+    "price": 7.79,
+    "tag": "Electronics",
+    "origin": "China",
+    "brand": "Baseus",
+    "stock": 27,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#e74c3c",
+      "#2c3e50",
+      "#f1c40f"
+    ],
+    "description": "A sticky ring grip and stand in one. Keeps your phone secure in any orientation.",
+    "img": "https://img.alicdn.com/bao/uploaded/i1/2209083264270/O1CN010YSHwm1hPiGos2xUl_!!2209083264270.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 5,
+    "name": "Disposable waterproof toilet seat cover",
+    "price": 7.5,
+    "tag": "Home",
+    "origin": "China",
+    "brand": "HomeCare",
+    "stock": 22,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#ffffff",
+      "#dfe9ec",
+      "#b0bec5"
+    ],
+    "description": "Individually wrapped, waterproof and comfortable. Peace of mind wherever you go.",
+    "img": "https://img.alicdn.com/bao/uploaded/i4/2219902819204/O1CN01hpvBoC2HrUVKOJ8k0_!!2219902819204.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 6,
+    "name": "Operating room sandals, medical clogs",
+    "price": 45.9,
+    "tag": "Fashion",
+    "origin": "China",
+    "brand": "MedStep",
+    "stock": 32,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#1a1a1a",
+      "#333333",
+      "#555555"
+    ],
+    "description": "Lightweight, easy-clean clogs designed for long shifts and busy days.",
+    "img": "https://img.alicdn.com/bao/uploaded/i3/2216300976695/O1CN01gS8v2f1zKMk4L18ms_!!4611686018427386423-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 7,
+    "name": "Car perfume and air freshener",
+    "price": 38.75,
+    "tag": "Auto",
+    "origin": "China",
+    "brand": "Lincoln",
+    "stock": 45,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#b08d57",
+      "#f5e6cc",
+      "#3f3f3f"
+    ],
+    "description": "A subtle, long-lasting car fragrance that keeps every drive fresh.",
+    "img": "https://img.alicdn.com/bao/uploaded/i3/2218742651986/O1CN01MopT3a1QXdgKFXVZE_!!2218742651986.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 8,
+    "name": "Soft sterile disposable underwear",
+    "price": 110.55,
+    "tag": "Fashion",
+    "origin": "China",
+    "brand": "CottonLab",
+    "stock": 11,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#d8d8d8",
+      "#b0bec5",
+      "#f5f5f5"
+    ],
+    "description": "Individually packed, breathable and comfortable. Ideal for travel and hospital stays.",
+    "img": "https://img.alicdn.com/bao/uploaded/i2/2217618979812/O1CN01wkXatR2MLxK1JSEjP_!!4611686018427386852-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 9,
+    "name": "Titanium gray frosted case for iPhone",
+    "price": 69.1,
+    "tag": "Electronics",
+    "origin": "China",
+    "brand": "Spigen",
+    "stock": 56,
+    "new": true,
+    "global": false,
+    "colors": [
+      "#5b5b5b",
+      "#8e8e8e",
+      "#2f2f2f"
+    ],
+    "description": "A slim matte case with a soft-touch finish and a precise camera cut-out.",
+    "img": "https://img.alicdn.com/bao/uploaded/i2/2218612120115/O1CN01aDhM131CiieOAh2O4_!!4611686018427386419-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 10,
+    "name": "German ultra-loud wireless Bluetooth speaker",
+    "price": 67.6,
+    "tag": "Electronics",
+    "origin": "Germany",
+    "brand": "Teufel",
+    "stock": 16,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#2c2c2c",
+      "#00bcd4",
+      "#7b1fa2"
+    ],
+    "description": "Rich room-filling sound in a compact body, with a long-lasting battery.",
+    "img": "https://img.alicdn.com/bao/uploaded/i2/2208457612939/O1CN01zqDlsy1Xa75A9CCt0_!!4611686018427387531-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 11,
+    "name": "ASUS Fearless 16-core Ultra 5 laptop",
+    "price": 8970.7,
+    "tag": "Electronics",
+    "origin": "China",
+    "brand": "ASUS",
+    "stock": 4,
+    "new": true,
+    "global": false,
+    "colors": [
+      "#c0c0c0",
+      "#2b2b2b",
+      "#1e88e5"
+    ],
+    "description": "A powerful 16-core laptop with a bright display, built for work and creation.",
+    "img": "https://img.alicdn.com/bao/uploaded/i3/686773455/O1CN01uzEl501bORWwiJKP4_!!4611686018427385039-0-item_pic.jpg_460x460q90.jpg_.webp"
+  },
+  {
+    "id": 12,
+    "name": "Minimalist Leather Watch",
+    "price": 268,
+    "tag": "Fashion",
+    "origin": "Germany",
+    "brand": "Aured",
+    "stock": 18,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#8d6e63",
+      "#d7ccc8",
+      "#3e2723"
+    ],
+    "description": "Clean lines and a genuine leather strap. Understated German design for every day.",
+    "img": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 13,
+    "name": "Classic Red Sneakers",
+    "price": 429,
+    "tag": "Fashion",
+    "origin": "USA",
+    "brand": "Runway",
+    "stock": 24,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#d32f2f",
+      "#ffffff",
+      "#212121"
+    ],
+    "description": "A bold everyday sneaker with cushioned soles and a timeless silhouette.",
+    "img": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 14,
+    "name": "Studio Wireless Headphones",
+    "price": 599,
+    "tag": "Electronics",
+    "origin": "USA",
+    "brand": "Soundwave",
+    "stock": 12,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#212121",
+      "#616161",
+      "#e0e0e0"
+    ],
+    "description": "Warm, detailed sound with plush earcups for all-day listening comfort.",
+    "img": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 15,
+    "name": "Mirrorless Camera Kit",
+    "price": 3299,
+    "tag": "Electronics",
+    "origin": "Japan",
+    "brand": "Sora",
+    "stock": 6,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#2f2f2f",
+      "#b0bec5",
+      "#37474f"
+    ],
+    "description": "A compact mirrorless camera with crisp detail and a versatile kit lens.",
+    "img": "https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 16,
+    "name": "Apex Smart Watch Series 8",
+    "price": 899,
+    "tag": "Electronics",
+    "origin": "USA",
+    "brand": "Apex",
+    "stock": 21,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#212121",
+      "#42a5f5",
+      "#eeeeee"
+    ],
+    "description": "Track workouts, sleep and notifications from a bright, always-on display.",
+    "img": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 17,
+    "name": "Polarized Sunglasses",
+    "price": 219,
+    "tag": "Fashion",
+    "origin": "Italy",
+    "brand": "Luce",
+    "stock": 33,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#212121",
+      "#5d4037",
+      "#c9a227"
+    ],
+    "description": "Italian-crafted frames with polarized lenses that cut glare beautifully.",
+    "img": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 18,
+    "name": "Noise-Cancelling Over-Ear Headphones",
+    "price": 749,
+    "tag": "Electronics",
+    "origin": "Germany",
+    "brand": "Aural",
+    "stock": 14,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#1a1a1a",
+      "#37474f",
+      "#90a4ae"
+    ],
+    "description": "Quiet the world with soft earcups and rich, balanced sound.",
+    "img": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 19,
+    "name": "Everyday Leather Tote",
+    "price": 389,
+    "tag": "Fashion",
+    "origin": "Italy",
+    "brand": "Bella",
+    "stock": 19,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#8d6e63",
+      "#5d4037",
+      "#d7ccc8"
+    ],
+    "description": "A roomy, softly structured tote in supple leather. Made to last for years.",
+    "img": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 20,
+    "name": "Lightweight Running Shoes",
+    "price": 359,
+    "tag": "Sports",
+    "origin": "USA",
+    "brand": "Stride",
+    "stock": 28,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#f5f5f5",
+      "#ef5350",
+      "#42a5f5"
+    ],
+    "description": "Breathable mesh and a springy sole for easy, comfortable miles.",
+    "img": "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 21,
+    "name": "Hydrating Skincare Set",
+    "price": 259,
+    "tag": "Beauty",
+    "origin": "South Korea",
+    "brand": "Lumi",
+    "stock": 40,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#f8bbd0",
+      "#fce4ec",
+      "#ffffff"
+    ],
+    "description": "A gentle three-step routine that leaves skin calm, soft and dewy.",
+    "img": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 22,
+    "name": "Radiance Makeup Kit",
+    "price": 319,
+    "tag": "Beauty",
+    "origin": "France",
+    "brand": "Roseau",
+    "stock": 17,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#d81b60",
+      "#f48fb1",
+      "#f8bbd0"
+    ],
+    "description": "A curated palette of flattering shades for an effortless everyday look.",
+    "img": "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 23,
+    "name": "Classic Canvas Backpack",
+    "price": 279,
+    "tag": "Fashion",
+    "origin": "UK",
+    "brand": "Heritage",
+    "stock": 26,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#5d4037",
+      "#8d6e63",
+      "#d7ccc8"
+    ],
+    "description": "A durable canvas backpack with a padded laptop sleeve and timeless style.",
+    "img": "https://images.unsplash.com/photo-1560343090-f0409e92791a?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 24,
+    "name": "Street Style Sneakers",
+    "price": 459,
+    "tag": "Fashion",
+    "origin": "USA",
+    "brand": "Urban",
+    "stock": 15,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#ffffff",
+      "#212121",
+      "#b0bec5"
+    ],
+    "description": "A clean, versatile low-top that pairs with just about everything.",
+    "img": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 25,
+    "name": "Anti-Ageing Brightening Serum",
+    "price": 429,
+    "tag": "Beauty",
+    "origin": "Japan",
+    "brand": "Mizuki",
+    "stock": 22,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#e6c27a",
+      "#fff3d6",
+      "#c48b3a"
+    ],
+    "description": "A lightweight serum that helps skin look brighter and more even.",
+    "img": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 26,
+    "name": "Premium Leather Wallet",
+    "price": 299,
+    "tag": "Fashion",
+    "origin": "Italy",
+    "brand": "Ferrara",
+    "stock": 31,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#3e2723",
+      "#6d4c41",
+      "#a1887f"
+    ],
+    "description": "Slim, hand-finished leather with room for cards and notes.",
+    "img": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 27,
+    "name": "Casual Canvas Shoes",
+    "price": 239,
+    "tag": "Fashion",
+    "origin": "France",
+    "brand": "Bleu",
+    "stock": 37,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#1565c0",
+      "#ffffff",
+      "#90caf9"
+    ],
+    "description": "Easy-going canvas shoes with a cushioned insole and a fresh blue finish.",
+    "img": "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 28,
+    "name": "Vintage Frame Sunglasses",
+    "price": 189,
+    "tag": "Fashion",
+    "origin": "USA",
+    "brand": "Vista",
+    "stock": 44,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#212121",
+      "#d7a86e",
+      "#424242"
+    ],
+    "description": "Retro-inspired frames with warm lenses and a comfortable fit.",
+    "img": "https://images.unsplash.com/photo-1511499767150-a48a237f0083?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 29,
+    "name": "Ergonomic Office Chair",
+    "price": 799,
+    "tag": "Furniture",
+    "origin": "China",
+    "brand": "ErgoHome",
+    "stock": 12,
+    "new": true,
+    "global": false,
+    "colors": [
+      "#5b5b5b",
+      "#7d7d7d",
+      "#b0bec5"
+    ],
+    "description": "Adjustable lumbar support and breathable mesh for all-day comfort.",
+    "img": "https://images.unsplash.com/photo-1565840796828-8e46f7f25721?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 30,
+    "name": "Mechanical Keyboard",
+    "price": 149,
+    "tag": "Electronics",
+    "origin": "USA",
+    "brand": "KeyTec",
+    "stock": 35,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#2b2b2b",
+      "#4e73df",
+      "#6c757d"
+    ],
+    "description": "Tactile switches and RGB backlighting for gaming and typing.",
+    "img": "https://images.unsplash.com/photo-1529255442517-335ac2e65f3d?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 31,
+    "name": "Smart Fitness Watch",
+    "price": 279,
+    "tag": "Sports",
+    "origin": "South Korea",
+    "brand": "FitTrack",
+    "stock": 42,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#000000",
+      "#212121",
+      "#5a5a5a"
+    ],
+    "description": "Heart rate monitor, sleep tracking, and 50m water resistance.",
+    "img": "https://images.unsplash.com/photo-1572169676451-56597f3e703e?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 32,
+    "name": "Ceramic Tea Set",
+    "price": 89,
+    "tag": "Home",
+    "origin": "China",
+    "brand": "TeaTime",
+    "stock": 25,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#e8e8e8",
+      "#d8d8d8",
+      "#f5f5f5"
+    ],
+    "description": "Traditional glazed ceramic with a comfortable grip.",
+    "img": "https://images.unsplash.com/photo-1555636161-c5f7e7f03ab2?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 33,
+    "name": "Leather Sofa",
+    "price": 1899,
+    "tag": "Furniture",
+    "origin": "Italy",
+    "brand": "Mobili",
+    "stock": 5,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#2c3e50",
+      "#f5f5f5",
+      "#ecf0f1"
+    ],
+    "description": "Genuine leather, hand-stitched cushions, seats three.",
+    "img": "https://images.unsplash.com/photo-1600357042010-431491202be3?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 34,
+    "name": "Electric Shaver",
+    "price": 129,
+    "tag": "Grooming",
+    "origin": "Japan",
+    "brand": "Braun",
+    "stock": 30,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#b0bec5",
+      "#78909c",
+      "#575d67"
+    ],
+    "description": "Wet/dry capability, 45-minute runtime on full charge.",
+    "img": "https://images.unsplash.com/photo-1623269676990-fd606ba019aa?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 35,
+    "name": "Yoga Mat",
+    "price": 45,
+    "tag": "Sports",
+    "origin": "India",
+    "brand": "YogaFit",
+    "stock": 55,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#e8e8e8",
+      "#a8d8ef",
+      "#5b9bd5"
+    ],
+    "description": "Non-slip surface, eco-friendly natural rubber.",
+    "img": "https://images.unsplash.com/photo-1587680684323-9563e35ff0ab?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 36,
+    "name": "Digital Photo Frame",
+    "price": 119,
+    "tag": "Electronics",
+    "origin": "China",
+    "brand": "PixStar",
+    "stock": 18,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#000000",
+      "#333333",
+      "#555555"
+    ],
+    "description": "10.1-inch display, Wi-Fi frame, supports vertical/horizontal photos.",
+    "img": "https://images.unsplash.com/photo-1558655149-6a8610285c39?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 37,
+    "name": "Baby Stroller",
+    "price": 349,
+    "tag": "Baby",
+    "origin": "USA",
+    "brand": "BabyEase",
+    "stock": 15,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#f8f9fa",
+      "#e9ecef",
+      "#dee2e6"
+    ],
+    "description": "One-hand fold, adjustable handle, large canopy.",
+    "img": "https://images.unsplash.com/photo-1558655149-6a8610285c39?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 38,
+    "name": "Electric Kettle",
+    "price": 67,
+    "tag": "Home",
+    "origin": "China",
+    "brand": "QuickHeat",
+    "stock": 48,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#2c3e50",
+      "#5d6d7e",
+      "#85929e"
+    ],
+    "description": "1.8L capacity, 360-degree base, auto shut-off.",
+    "img": "https://images.unsplash.com/photo-1556909134-fb3944f5e7e4?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 39,
+    "name": "Running Shorts",
+    "price": 39,
+    "tag": "Sports",
+    "origin": "USA",
+    "brand": "StrideX",
+    "stock": 62,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#1a1a1a",
+      "#333333",
+      "#555555"
+    ],
+    "description": "Moisture-wicking, built-in liner, multiple pockets.",
+    "img": "https://images.unsplash.com/photo-1556909134-fb3944f5e7e4?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 40,
+    "name": "Sunglasses",
+    "price": 79,
+    "tag": "Fashion",
+    "origin": "Italy",
+    "brand": "SunShade",
+    "stock": 75,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#d32f2f",
+      "#ff5722",
+      "#ffc107"
+    ],
+    "description": "UV400 protection, polarized lenses, lightweight metal frame.",
+    "img": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 41,
+    "name": "Perfume Spray",
+    "price": 55,
+    "tag": "Beauty",
+    "origin": "France",
+    "brand": "Scentifique",
+    "stock": 90,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#e8e8e8",
+      "#f5f5f5",
+      "#fafafa"
+    ],
+    "description": "100ml Eau de Parfum, long-lasting scent, elegant bottle.",
+    "img": "https://images.unsplash.com/photo-1546062847-6134a3702bfb?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 42,
+    "name": "Gift Wrap Set",
+    "price": 15,
+    "tag": "Stationery",
+    "origin": "China",
+    "brand": "WrapMagic",
+    "stock": 100,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#f5f5f5",
+      "#e8e8e8",
+      "#d6d6d6"
+    ],
+    "description": "Reusable wrapping paper, ribbons, gift tags, scissors.",
+    "img": "https://images.unsplash.com/photo-1556909134-fb3944f5e7e4?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 43,
+    "name": "Travel Backpack",
+    "price": 89,
+    "tag": "Fashion",
+    "origin": "China",
+    "brand": "TravelPro",
+    "stock": 38,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#2c3e50",
+      "#5d6d7e",
+      "#95a5a6"
+    ],
+    "description": "TSA-friendly, water-resistant, padded laptop compartment.",
+    "img": "https://images.unsplash.com/photo-1553671506-da66c6d574fa?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 44,
+    "name": "Desk Lamp",
+    "price": 79,
+    "tag": "Furniture",
+    "origin": "China",
+    "brand": "Lightify",
+    "stock": 22,
+    "new": false,
+    "global": false,
+    "colors": [
+      "#f5f5f5",
+      "#e8e8e8",
+      "#d6d6d6"
+    ],
+    "description": "Adjustable arm, 3 brightness levels, eye-care mode.",
+    "img": "https://images.unsplash.com/photo-1507402261648-52bb47d1a8c7?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 45,
+    "name": "Smartphone",
+    "price": 699,
+    "tag": "Electronics",
+    "origin": "China",
+    "brand": "XPhone",
+    "stock": 8,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#black",
+      "#white",
+      "#blue"
+    ],
+    "description": "6.1-inch display, 128MP camera, 5G enabled.",
+    "img": "https://images.unsplash.com/photo-1592663942248-f5aab5b2b5a0?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 46,
+    "name": "Weight Set",
+    "price": 229,
+    "tag": "Sports",
+    "origin": "USA",
+    "brand": "FitLife",
+    "stock": 12,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#b0bec5",
+      "#85929e",
+      "#575d67"
+    ],
+    "description": "Adjustable dumbbells 5-25kg, compact design for home gym.",
+    "img": "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 47,
+    "name": "Wall Clock",
+    "price": 45,
+    "tag": "Home",
+    "origin": "Germany",
+    "brand": "TickTac",
+    "stock": 50,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#white",
+      "#black",
+      "#navy"
+    ],
+    "description": "Quartz movement, silent sweep, minimalist design.",
+    "img": "https://images.unsplash.com/photo-1509395176734-a5din740420928-5e560c06d30e?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 48,
+    "name": "Hair Dryer",
+    "price": 89,
+    "tag": "Beauty",
+    "origin": "France",
+    "brand": "AirDry",
+    "stock": 28,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#pink",
+      "#white",
+      "#blue"
+    ],
+    "description": "Ionic technology, 3 heat settings, cool shot button.",
+    "img": "https://images.unsplash.com/photo-1506793616285-0566b57db41e?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 49,
+    "name": "Gaming Mouse",
+    "price": 69,
+    "tag": "Electronics",
+    "origin": "USA",
+    "brand": "GameOn",
+    "stock": 65,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#black",
+      "#red",
+      "#blue"
+    ],
+    "description": "RGB backlighting, adjustable DPI, ergonomic design.",
+    "img": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 50,
+    "name": "Area Rug",
+    "price": 179,
+    "tag": "Furniture",
+    "origin": "Turkey",
+    "brand": "RugArt",
+    "stock": 15,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#beige",
+      "#brown",
+      "#gray"
+    ],
+    "description": "Hand-woven, 80% wool, 20% cotton, various sizes available.",
+    "img": "https://images.unsplash.com/photo-1566503911422-1s2c1f8f6c40?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 51,
+    "name": "Winter Coat",
+    "price": 249,
+    "tag": "Fashion",
+    "origin": "China",
+    "brand": "WinterWave",
+    "stock": 22,
+    "new": true,
+    "global": true,
+    "colors": [
+      "#black",
+      "#navy",
+      "#gray"
+    ],
+    "description": "Water-resistant, fur-lined hood, multiple pockets.",
+    "img": "https://images.unsplash.com/photo-1581454142311-3c8d2698996e?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 52,
+    "name": "Running Shoes",
+    "price": 129,
+    "tag": "Sports",
+    "origin": "USA",
+    "brand": "StridePro",
+    "stock": 50,
+    "new": false,
+    "global": true,
+    "colors": [
+      "#white",
+      "#black",
+      "#gray"
+    ],
+    "description": "Breathable mesh, responsive cushioning, durable outsole.",
+    "img": "https://images.unsplash.com/photo-1583922227388-ef12c4e0ddfe?w=460&h=460&fit=crop"
+  },
+  {
+    "id": 53,
+    "name": "Gift Card - 50",
+    "price": 50,
+    "tag": "Gift",
+    "origin": "USA",
+    "brand": "Tmall",
+    "stock": 999,
+    "new": false,
+    "global": false,
+    "colors": [],
+    "description": "Digital gift card, valid for any product on Tmall.",
+    "img": "https://images.unsplash.com/photo-1581090660323-9876e13ad3d3?w=460&h=460&fit=crop"
+  }
 ]

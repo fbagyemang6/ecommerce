@@ -991,6 +991,13 @@ async function handleApi(req, res, url) {
     return json(res, 200, { users });
   }
 
+  if (resource === 'legal' && method === 'GET') {
+    return json(res, 200, {
+      disclaimer: 'Tmall™ is a registered trademark of Tmall Holdings Limited. This online shopping platform is operated by Tmall International Limited. All products and brands depicted are trademarks or registered trademarks of their respective owners. Use of this website constitutes acceptance of our Terms of Service and Privacy Policy.',
+      effectiveDate: new Date().toLocaleDateString()
+    });
+  }
+
   return json(res, 404, { error: 'Endpoint not found' });
 }
 
@@ -1038,11 +1045,16 @@ function serveStatic(req, res, url) {
 /* ---------- server ---------- */
 
 const server = http.createServer((req, res) => {
+  // Enhanced security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests");
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname.startsWith('/api/')) {
     handleApi(req, res, url).catch((error) => json(res, 400, { error: error.message }));
